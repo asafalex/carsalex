@@ -3,90 +3,101 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>הרכבים שלי חדש</title>
+<title>הרכבים שלי</title>
 <style>
 body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f5f7fb;color:#172033}
 .wrap{max-width:1180px;margin:auto;padding:24px 14px 40px}
-h1{margin:0 0 6px;font-size:30px} .sub{color:#6b7280;margin-bottom:18px}
+h1{margin:0 0 6px;font-size:30px}.sub{color:#6b7280;margin-bottom:18px}
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 .card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;box-shadow:0 8px 24px rgba(17,24,39,.06)}
 .card h2{margin:0;padding:17px 18px;font-size:20px;background:#111827;color:#fff}
-table{width:100%;border-collapse:collapse} th,td{padding:12px 14px;border-bottom:1px solid #e5e7eb;text-align:right;vertical-align:top;font-size:14px}
-th{width:42%;background:#fafafa;font-weight:600} tr:last-child th,tr:last-child td{border-bottom:none}
-.missing{color:#6b7280} .note{margin-top:18px;font-size:13px;color:#6b7280;text-align:center}
-.error{background:#fff3cd;border:1px solid #ffe69c;padding:14px;border-radius:12px}
-@media(max-width:760px){.grid{grid-template-columns:1fr}.wrap{padding:14px 10px 28px}h1{font-size:25px}}
+table{width:100%;border-collapse:collapse}th,td{padding:12px 14px;border-bottom:1px solid #e5e7eb;text-align:right;vertical-align:top;font-size:14px}
+th{width:42%;background:#fafafa;font-weight:600}tr:last-child th,tr:last-child td{border-bottom:none}.missing{color:#6b7280}
+.note{margin-top:18px;font-size:13px;color:#6b7280;text-align:center}
+.login{max-width:420px;margin:12vh auto 0;background:#fff;border:1px solid #e5e7eb;border-radius:20px;padding:26px;box-shadow:0 12px 32px rgba(17,24,39,.08)}
+.login h1{font-size:26px;margin-bottom:8px}.login p{color:#6b7280;margin-top:0}
+input{width:100%;padding:13px 14px;border:1px solid #d1d5db;border-radius:12px;font-size:16px;direction:ltr;box-sizing:border-box}
+button{border:0;border-radius:12px;padding:12px 16px;font-size:15px;font-weight:600;cursor:pointer}
+.primary{width:100%;margin-top:12px;background:#111827;color:#fff}.logout{background:#fff;border:1px solid #d1d5db}
+.topbar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:18px}
+.error{color:#b91c1c;margin-top:10px;font-size:14px;min-height:20px}.hidden{display:none}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.wrap{padding:14px 10px 28px}h1{font-size:25px}.login{margin:8vh 12px 0}}
 </style>
 </head>
 <body>
-<main class="wrap">
-<h1>הרכבים שלי</h1>
-<div class="sub">ביטוח, טיפולים, מוסך, חילוץ, טסט ורישוי</div>
-<section id="vehicles" class="grid"><div>טוען נתונים...</div></section>
-<div class="note">הנתונים מתעדכנים ממסד הנתונים • ללא מספרי תעודת זהות</div>
+<section id="loginView" class="login">
+  <h1>הרכבים שלי</h1>
+  <p>הכנס סיסמה כדי לצפות בפרטי הרכבים.</p>
+  <form id="loginForm">
+    <input id="password" type="password" autocomplete="current-password" placeholder="סיסמה" required>
+    <button class="primary" type="submit">כניסה</button>
+    <div id="loginError" class="error"></div>
+  </form>
+</section>
+<main id="appView" class="wrap hidden">
+  <div class="topbar">
+    <div><h1>הרכבים שלי</h1><div class="sub">ביטוח, טיפולים, מוסך, חילוץ, טסט ורישוי</div></div>
+    <button id="logoutBtn" class="logout">יציאה</button>
+  </div>
+  <section id="vehicles" class="grid"></section>
+  <div class="note">הנתונים מתעדכנים ממסד הנתונים • ללא מספרי תעודת זהות</div>
 </main>
 <script>
 const SUPABASE_URL = "https://pfhabpuzcxcfnuetrdln.supabase.co";
 const SUPABASE_KEY = "sb_publishable_L3U7coYuTu2u4-4eR9XYfw_ShA49ueL";
-
+const SESSION_KEY = "carsalex_password";
+const SESSION_EXPIRY_KEY = "carsalex_password_expiry";
+const REMEMBER_MS = 7 * 24 * 60 * 60 * 1000;
 const fields = [
-  ["שנת ייצור","model_year"],
-  ["מספר רישוי","license_plate"],
-  ["חברת ביטוח","insurance_company"],
-  ["ביטוח עד","insurance_expiry"],
-  ["טלפון חברת ביטוח","insurance_phone"],
-  ["WhatsApp ביטוח","insurance_whatsapp"],
-  ["חברת חילוץ","roadside_company"],
-  ["טלפון חילוץ","roadside_phone"],
-  ["טיפול אחרון","last_service_label"],
-  ["תדירות טיפול","service_frequency"],
-  ["טיפול הבא","next_service_label"],
-  ["מוסך מטפל","garage_name"],
-  ["כתובת מוסך","garage_address"],
-  ["טלפון מוסך","garage_phone"],
-  ["איש קשר במוסך","garage_contact_name"],
-  ["טלפון איש קשר","garage_contact_phone"],
-  ["טסט הבא","next_test_label"],
-  ["חידוש רישיון רכב","registration_renewal_label"]
-];
-
-function esc(v) {
-  return String(v ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-function formatDate(v) {
-  if (!v) return null;
-  const p=v.split("-");
-  return p.length===3 ? `${p[2]}/${p[1]}/${p[0]}` : v;
-}
-function displayValue(key, value) {
-  if (key === "insurance_expiry" && value) return formatDate(value);
-  return value;
-}
-async function loadVehicles() {
+["שנת ייצור","model_year"],["מספר רישוי","license_plate"],["חברת ביטוח","insurance_company"],
+["ביטוח עד","insurance_expiry"],["טלפון חברת ביטוח","insurance_phone"],["WhatsApp ביטוח","insurance_whatsapp"],
+["חברת חילוץ","roadside_company"],["טלפון חילוץ","roadside_phone"],["טיפול אחרון","last_service_label"],
+["תדירות טיפול","service_frequency"],["טיפול הבא","next_service_label"],["מוסך מטפל","garage_name"],
+["כתובת מוסך","garage_address"],["טלפון מוסך","garage_phone"],["איש קשר במוסך","garage_contact_name"],
+["טלפון איש קשר","garage_contact_phone"],["טסט הבא","next_test_label"],["חידוש רישיון רכב","registration_renewal_label"]];
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function formatDate(v){if(!v)return null;const p=v.split("-");return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:v;}
+function displayValue(key,value){return key==="insurance_expiry"&&value?formatDate(value):value;}
+function renderVehicles(vehicles){
   const box=document.getElementById("vehicles");
-  try {
-    const res=await fetch(`${SUPABASE_URL}/rest/v1/vehicles?select=*&order=sort_order.asc`, {
-      headers: {
-        "apikey": SUPABASE_KEY,
-        "Authorization": `Bearer ${SUPABASE_KEY}`
-      }
-    });
-    if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    const vehicles=await res.json();
-    box.innerHTML=vehicles.map(v => {
-      const rows=fields.map(([label,key]) => {
-        const raw=displayValue(key,v[key]);
-        const missing=raw===null || raw===undefined || raw==="";
-        return `<tr><th>${esc(label)}</th><td class="${missing?'missing':''}">${missing?'חסר מידע':esc(raw)}</td></tr>`;
-      }).join("");
-      return `<article class="card"><h2>${esc(v.display_name)}</h2><table>${rows}</table></article>`;
+  box.innerHTML=vehicles.map(v=>{
+    const rows=fields.map(([label,key])=>{
+      const raw=displayValue(key,v[key]); const missing=raw===null||raw===undefined||raw==="";
+      return `<tr><th>${esc(label)}</th><td class="${missing?'missing':''}">${missing?'חסר מידע':esc(raw)}</td></tr>`;
     }).join("");
-  } catch(e) {
-    box.innerHTML=`<div class="error">לא ניתן לטעון כרגע את נתוני הרכבים. נסה לרענן את העמוד.</div>`;
-    console.error(e);
+    return `<article class="card"><h2>${esc(v.display_name)}</h2><table>${rows}</table></article>`;
+  }).join("");
+}
+async function fetchVehicles(password){
+  const res=await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_vehicles_with_password`,{
+    method:"POST",
+    headers:{"apikey":SUPABASE_KEY,"Authorization":`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json"},
+    body:JSON.stringify({p_password:password})
+  });
+  if(!res.ok) throw new Error("INVALID_PASSWORD");
+  return await res.json();
+}
+async function login(password){
+  document.getElementById("loginError").textContent="";
+  try{
+    const vehicles=await fetchVehicles(password);
+    localStorage.setItem(SESSION_KEY,password);
+    localStorage.setItem(SESSION_EXPIRY_KEY, String(Date.now() + REMEMBER_MS));
+    renderVehicles(vehicles);
+    document.getElementById("loginView").classList.add("hidden");
+    document.getElementById("appView").classList.remove("hidden");
+  }catch{
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(SESSION_EXPIRY_KEY);
+    document.getElementById("loginError").textContent="סיסמה שגויה.";
   }
 }
-loadVehicles();
+document.getElementById("loginForm").addEventListener("submit",e=>{e.preventDefault();login(document.getElementById("password").value);});
+document.getElementById("logoutBtn").addEventListener("click",()=>{localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(SESSION_EXPIRY_KEY);location.reload();});
+const saved = localStorage.getItem(SESSION_KEY);
+const expiry = Number(localStorage.getItem(SESSION_EXPIRY_KEY) || 0);
+if (saved && Date.now() < expiry) { login(saved); } else { localStorage.removeItem(SESSION_KEY); localStorage.removeItem(SESSION_EXPIRY_KEY); }
 </script>
 </body>
 </html>
