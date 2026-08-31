@@ -3,58 +3,90 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>הרכבים שלי</title>
+<title>הרכבים שלי חדש</title>
 <style>
 body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f5f7fb;color:#172033}
 .wrap{max-width:1180px;margin:auto;padding:24px 14px 40px}
-h1{margin:0 0 6px;font-size:30px}.sub{color:#6b7280;margin-bottom:18px}
+h1{margin:0 0 6px;font-size:30px} .sub{color:#6b7280;margin-bottom:18px}
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 .card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;box-shadow:0 8px 24px rgba(17,24,39,.06)}
 .card h2{margin:0;padding:17px 18px;font-size:20px;background:#111827;color:#fff}
-table{width:100%;border-collapse:collapse}th,td{padding:12px 14px;border-bottom:1px solid #e5e7eb;text-align:right;vertical-align:top;font-size:14px}
-th{width:42%;background:#fafafa;font-weight:600}tr:last-child th,tr:last-child td{border-bottom:none}.missing{color:#6b7280}
-.note{margin-top:18px;font-size:13px;color:#6b7280;text-align:center}
+table{width:100%;border-collapse:collapse} th,td{padding:12px 14px;border-bottom:1px solid #e5e7eb;text-align:right;vertical-align:top;font-size:14px}
+th{width:42%;background:#fafafa;font-weight:600} tr:last-child th,tr:last-child td{border-bottom:none}
+.missing{color:#6b7280} .note{margin-top:18px;font-size:13px;color:#6b7280;text-align:center}
+.error{background:#fff3cd;border:1px solid #ffe69c;padding:14px;border-radius:12px}
 @media(max-width:760px){.grid{grid-template-columns:1fr}.wrap{padding:14px 10px 28px}h1{font-size:25px}}
 </style>
 </head>
-<body><main class="wrap">
-<h1>הרכבים שלי</h1><div class="sub">ביטוח, טיפולים, מוסך, חילוץ, טסט ורישוי</div>
-<section class="grid">
+<body>
+<main class="wrap">
+<h1>הרכבים שלי</h1>
+<div class="sub">ביטוח, טיפולים, מוסך, חילוץ, טסט ורישוי</div>
+<section id="vehicles" class="grid"><div>טוען נתונים...</div></section>
+<div class="note">הנתונים מתעדכנים ממסד הנתונים • ללא מספרי תעודת זהות</div>
+</main>
+<script>
+const SUPABASE_URL = "https://pfhabpuzcxcfnuetrdln.supabase.co";
+const SUPABASE_KEY = "sb_publishable_L3U7coYuTu2u4-4eR9XYfw_ShA49ueL";
 
-<article class="card"><h2>Tesla Model Y</h2><table>
-<tr><th>שנת ייצור</th><td>2025</td></tr><tr><th>מספר רישוי</th><td><b>388-45-204</b></td></tr>
-<tr><th>חברת ביטוח</th><td>הפניקס</td></tr><tr><th>ביטוח עד</th><td><b>31/08/2027</b></td></tr>
-<tr><th>טלפון חברת ביטוח</th><td>077-888888</td></tr><tr><th>WhatsApp ביטוח</th><td>+972 54-989-3455</td></tr>
-<tr><th>חברת חילוץ</th><td>דרכים</td></tr><tr><th>טלפון חילוץ</th><td><b>*2008</b></td></tr>
-<tr><th>טיפול אחרון</th><td class="missing">חסר מידע</td></tr><tr><th>טיפול הבא</th><td class="missing">חסר מידע</td></tr>
-<tr><th>מוסך מטפל</th><td class="missing">חסר מידע</td></tr><tr><th>טסט הבא</th><td class="missing">חסר מידע</td></tr>
-<tr><th>חידוש רישיון רכב</th><td class="missing">חסר מידע</td></tr></table></article>
+const fields = [
+  ["שנת ייצור","model_year"],
+  ["מספר רישוי","license_plate"],
+  ["חברת ביטוח","insurance_company"],
+  ["ביטוח עד","insurance_expiry"],
+  ["טלפון חברת ביטוח","insurance_phone"],
+  ["WhatsApp ביטוח","insurance_whatsapp"],
+  ["חברת חילוץ","roadside_company"],
+  ["טלפון חילוץ","roadside_phone"],
+  ["טיפול אחרון","last_service_label"],
+  ["תדירות טיפול","service_frequency"],
+  ["טיפול הבא","next_service_label"],
+  ["מוסך מטפל","garage_name"],
+  ["כתובת מוסך","garage_address"],
+  ["טלפון מוסך","garage_phone"],
+  ["איש קשר במוסך","garage_contact_name"],
+  ["טלפון איש קשר","garage_contact_phone"],
+  ["טסט הבא","next_test_label"],
+  ["חידוש רישיון רכב","registration_renewal_label"]
+];
 
-<article class="card"><h2>Tesla Model 3 Long Range</h2><table>
-<tr><th>שנת ייצור</th><td>2022</td></tr><tr><th>מספר רישוי</th><td><b>302-70-503</b></td></tr>
-<tr><th>חברת ביטוח</th><td>הפניקס</td></tr><tr><th>ביטוח עד</th><td><b>30/11/2026</b></td></tr>
-<tr><th>WhatsApp ביטוח</th><td>+972 54-989-3455</td></tr><tr><th>חברת חילוץ</th><td>דרכים</td></tr>
-<tr><th>טלפון חילוץ</th><td><b>*2008</b></td></tr><tr><th>טיפול אחרון</th><td class="missing">חסר מידע</td></tr>
-<tr><th>טיפול הבא</th><td class="missing">חסר מידע</td></tr><tr><th>מוסך מטפל</th><td class="missing">חסר מידע</td></tr>
-<tr><th>טסט הבא</th><td class="missing">חסר מידע</td></tr><tr><th>חידוש רישיון רכב</th><td class="missing">חסר מידע</td></tr></table></article>
-
-<article class="card"><h2>Kia Picanto Line GT</h2><table>
-<tr><th>שנת ייצור</th><td>2025</td></tr><tr><th>מספר רישוי</th><td><b>291-95-204</b></td></tr>
-<tr><th>חברת ביטוח</th><td>ביטוח ישיר</td></tr><tr><th>ביטוח עד</th><td><b>30/04/2027</b></td></tr>
-<tr><th>חברת חילוץ</th><td class="missing">חסר מידע</td></tr><tr><th>טלפון חילוץ</th><td class="missing">חסר מידע</td></tr>
-<tr><th>טיפול אחרון</th><td><b>אפריל 2026</b></td></tr><tr><th>תדירות טיפול</th><td>כל שנה</td></tr>
-<tr><th>טיפול הבא</th><td><b>אפריל 2027</b></td></tr><tr><th>מוסך מטפל</th><td>מרכז שירות – קיה הוד השרון</td></tr>
-<tr><th>כתובת מוסך</th><td>המסגר 11, הוד השרון</td></tr><tr><th>טלפון מוסך</th><td class="missing">חסר מידע</td></tr>
-<tr><th>איש קשר במוסך</th><td class="missing">חסר מידע</td></tr><tr><th>טלפון איש קשר</th><td class="missing">חסר מידע</td></tr>
-<tr><th>טסט הבא</th><td class="missing">חסר מידע</td></tr><tr><th>חידוש רישיון רכב</th><td class="missing">חסר מידע</td></tr></table></article>
-
-<article class="card"><h2>Ford Kuga Trend 2X4</h2><table>
-<tr><th>שנת ייצור</th><td>2017</td></tr><tr><th>מספר רישוי</th><td><b>4604855</b></td></tr>
-<tr><th>חברת ביטוח</th><td>אנקור — לא מאומת</td></tr><tr><th>ביטוח עד</th><td><b>30/06/2027</b></td></tr>
-<tr><th>חברת חילוץ</th><td>דרכים</td></tr><tr><th>טלפון חילוץ</th><td><b>*2008</b></td></tr>
-<tr><th>טיפול אחרון</th><td class="missing">חסר מידע</td></tr><tr><th>טיפול הבא</th><td class="missing">חסר מידע</td></tr>
-<tr><th>מוסך מטפל</th><td class="missing">חסר מידע</td></tr><tr><th>טסט הבא</th><td class="missing">חסר מידע</td></tr>
-<tr><th>חידוש רישיון רכב</th><td class="missing">חסר מידע</td></tr></table></article>
-
-</section><div class="note">ללא מספרי תעודת זהות • פרטים לא מאומתים מסומנים בהתאם</div>
-</main></body></html>
+function esc(v) {
+  return String(v ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function formatDate(v) {
+  if (!v) return null;
+  const p=v.split("-");
+  return p.length===3 ? `${p[2]}/${p[1]}/${p[0]}` : v;
+}
+function displayValue(key, value) {
+  if (key === "insurance_expiry" && value) return formatDate(value);
+  return value;
+}
+async function loadVehicles() {
+  const box=document.getElementById("vehicles");
+  try {
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/vehicles?select=*&order=sort_order.asc`, {
+      headers: {
+        "apikey": SUPABASE_KEY,
+        "Authorization": `Bearer ${SUPABASE_KEY}`
+      }
+    });
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const vehicles=await res.json();
+    box.innerHTML=vehicles.map(v => {
+      const rows=fields.map(([label,key]) => {
+        const raw=displayValue(key,v[key]);
+        const missing=raw===null || raw===undefined || raw==="";
+        return `<tr><th>${esc(label)}</th><td class="${missing?'missing':''}">${missing?'חסר מידע':esc(raw)}</td></tr>`;
+      }).join("");
+      return `<article class="card"><h2>${esc(v.display_name)}</h2><table>${rows}</table></article>`;
+    }).join("");
+  } catch(e) {
+    box.innerHTML=`<div class="error">לא ניתן לטעון כרגע את נתוני הרכבים. נסה לרענן את העמוד.</div>`;
+    console.error(e);
+  }
+}
+loadVehicles();
+</script>
+</body>
+</html>
