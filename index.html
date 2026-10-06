@@ -10,7 +10,9 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans
 h1{margin:0 0 6px;font-size:30px}.sub{color:#6b7280;margin-bottom:18px}
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 .card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;box-shadow:0 8px 24px rgba(17,24,39,.06)}
-.card h2{margin:0;padding:17px 18px;font-size:20px;background:#111827;color:#fff}
+.card h2{margin:0;padding:17px 18px;font-size:20px;background:#111827;color:#fff;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.badge{font-size:12px;font-weight:600;padding:5px 11px;border-radius:999px;background:rgba(255,255,255,.15);white-space:nowrap}
+.badge.soon{background:#f59e0b;color:#111827}.badge.overdue{background:#ef4444;color:#fff}
 table{width:100%;border-collapse:collapse}th,td{padding:12px 14px;border-bottom:1px solid #e5e7eb;text-align:right;vertical-align:top;font-size:14px}
 th{width:42%;background:#fafafa;font-weight:600}tr:last-child th,tr:last-child td{border-bottom:none}.missing{color:#6b7280}
 .note{margin-top:18px;font-size:13px;color:#6b7280;text-align:center}
@@ -58,6 +60,35 @@ const fields = [
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function formatDate(v){if(!v)return null;const p=v.split("-");return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:v;}
 function displayValue(key,value){return key==="insurance_expiry"&&value?formatDate(value):value;}
+function parseLabelDate(str){
+  const m=String(str||"").match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(!m) return null;
+  const d=new Date(Number(m[3]),Number(m[2])-1,Number(m[1]));
+  return isNaN(d)?null:d;
+}
+function daysUntil(date){
+  const today=new Date(); today.setHours(0,0,0,0);
+  const d=new Date(date); d.setHours(0,0,0,0);
+  return Math.round((d-today)/86400000);
+}
+function nextTask(v){
+  const candidates=[
+    {label:"ביטוח",date:v.insurance_expiry?new Date(v.insurance_expiry+"T00:00:00"):null},
+    {label:"רישיון רכב",date:parseLabelDate(v.registration_renewal_label)},
+    {label:"טסט",date:parseLabelDate(v.next_test_label)}
+  ].filter(c=>c.date);
+  if(!candidates.length) return null;
+  candidates.sort((a,b)=>a.date-b.date);
+  const task=candidates[0];
+  return {label:task.label,days:daysUntil(task.date)};
+}
+function taskBadge(v){
+  const task=nextTask(v);
+  if(!task) return "";
+  const cls=task.days<0?"overdue":(task.days<=30?"soon":"");
+  const text=task.days<0?`איחור של ${Math.abs(task.days)} ימים · ${task.label}`:`עוד ${task.days} ימים · ${task.label}`;
+  return `<span class="badge ${cls}">${esc(text)}</span>`;
+}
 function renderVehicles(vehicles){
   const box=document.getElementById("vehicles");
   box.innerHTML=vehicles.map(v=>{
@@ -65,7 +96,7 @@ function renderVehicles(vehicles){
       const raw=displayValue(key,v[key]); const missing=raw===null||raw===undefined||raw==="";
       return `<tr><th>${esc(label)}</th><td class="${missing?'missing':''}">${missing?'חסר מידע':esc(raw)}</td></tr>`;
     }).join("");
-    return `<article class="card"><h2>${esc(v.display_name)}</h2><table>${rows}</table></article>`;
+    return `<article class="card"><h2><span>${esc(v.display_name)}</span>${taskBadge(v)}</h2><table>${rows}</table></article>`;
   }).join("");
 }
 async function fetchVehicles(password){
