@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Domain Traffic - Cloudflare</title>
+<style>
+:root{color-scheme:light}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f7f8fa;color:#172033;overflow-x:hidden}
+.wrap{max-width:1100px;margin:auto;padding:24px 14px 40px}
+h1{margin:0 0 6px;font-size:28px}.sub{color:#6b7280;margin-bottom:18px}
+.topbar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+.nav{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.nav a{color:#172033;text-decoration:none;font-size:14px;padding:9px 14px;border-radius:10px;border:1px solid #d1d5db;background:#fff;cursor:pointer}
+.nav a:hover{border-color:#9ca3af}
+.nav a.active{background:#111827;color:#fff;border-color:#111827}
+.login{max-width:420px;margin:12vh auto 0;background:#fff;border:1px solid #e5e7eb;border-radius:20px;padding:26px;box-shadow:0 12px 32px rgba(17,24,39,.08)}
+.login h1{font-size:26px;margin-bottom:8px}.login p{color:#6b7280;margin-top:0}
+input{padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;font-size:15px;box-sizing:border-box;max-width:100%}
+input[type=password]{width:100%}
+button{border:0;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;cursor:pointer}
+.primary{width:100%;margin-top:12px;background:#111827;color:#fff}
+.logout{background:#fff;border:1px solid #d1d5db}
+.error{color:#b91c1c;margin-top:10px;font-size:14px;min-height:20px}
+.hidden{display:none}
+.updating-badge{font-size:12px;color:#6b7280;font-weight:600}
+.loading-overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;gap:12px;flex-direction:column;background:rgba(247,248,250,.85);z-index:50;opacity:0;pointer-events:none;transition:opacity .15s}
+.loading-overlay.active{opacity:1;pointer-events:auto}
+.progress-bar-track{width:220px;height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden}
+.progress-bar-fill{height:100%;width:0%;background:#111827;border-radius:999px;transition:width .2s linear}
+.loading-overlay span{font-size:14px;color:#6b7280;font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.stat{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:13px 14px;box-shadow:0 8px 20px rgba(17,24,39,.05)}
+.stat .label{font-size:12px;color:#6b7280;margin-bottom:4px}
+.stat .value{font-size:22px;font-weight:700}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.chip{background:#fff;border:1px solid #d1d5db;color:#374151;font-size:13px;font-weight:600;padding:7px 13px;border-radius:999px;cursor:pointer}
+.chip:hover{border-color:#9ca3af}
+.chip.active{background:#111827;color:#fff;border-color:#111827}
+.panel{background:#fff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;box-shadow:0 8px 24px rgba(17,24,39,.05)}
+.table-scroll{overflow:auto;max-height:72vh}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px 12px;border-bottom:1px solid #eef0f3;text-align:left;font-size:13px}
+th{background:#fafbfc;font-weight:600;position:sticky;top:0;z-index:1}
+td.domain{font-weight:600;white-space:nowrap}
+td.spark{width:160px}
+.sparkline{width:150px;height:36px;display:block}
+.badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.badge-ok{background:#bbf7d0;color:#14532d}
+.badge-drop{background:#fee2e2;color:#991b1b}
+.badge-stopped{background:#fecaca;color:#7f1d1d}
+.badge-pending{background:#f3f4f6;color:#9ca3af}
+.badge-unknown{background:#e5e7eb;color:#374151}
+.pct{font-size:12px;color:#6b7280;margin-left:6px}
+.muted{color:#6b7280;padding:20px;text-align:center}
+#content{transition:opacity .15s}
+@media(max-width:700px){.stats{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<section id="loginView" class="login">
+  <h1>Domain Traffic</h1>
+  <p>Enter the password to view traffic health.</p>
+  <form id="loginForm">
+    <input id="password" type="password" autocomplete="current-password" placeholder="Password" required>
+    <button class="primary" type="submit">Login</button>
+    <div id="loginError" class="error"></div>
+  </form>
+</section>
+
+<div id="loadingOverlay" class="loading-overlay"><div class="progress-bar-track"><div class="progress-bar-fill" id="progressFill"></div></div><span id="progressPct">Loading… 0%</span></div>
+
+<main id="appView" class="wrap hidden">
+  <div class="topbar">
+    <div><h1>Domain Traffic</h1><div class="sub" id="rangeLabel">7-day traffic health per domain (Cloudflare)</div></div>
+    <span id="updatingBadge" class="updating-badge hidden">Checking traffic…</span>
+    <button id="refreshBtn" class="logout" type="button">↻ Refresh</button>
+    <button id="logoutBtn" class="logout">Logout</button>
+  </div>
+
+  <div class="nav">
+    <a href="keitaro-mbm.html">General Dashboard</a>
+    <a href="keitaro-groups-mbm.html">By Group</a>
+    <a href="ltv.html">LTV Report</a>
+    <a href="ranking.html">Ranking</a>
+    <a href="commission.html">Commission</a>
+    <a href="commission_worker.html">Commission Worker</a>
+    <a href="operations.html">Operations Report</a>
+    <a href="operations-september.html">Operations September</a>
+    <a href="ftd.html">FTD</a>
+    <a href="offer-mbm.html">Offer</a>
+    <a href="chat-mbm.html">Chat</a>
+    <a href="domain.html">Domains</a>
+    <a href="domain_traffic.html" class="active">Traffic</a>
+    <a href="keitaro_domains.html">Domains (DB)</a>
+    <a href="onesignal.html">OneSignal</a>
+    <a href="zone.html">Zones</a>
+    <a href="keitaro_amz_group.html">Keitaro Groups</a>
+    <a href="namecheap.html">Namecheap</a>
+  </div>
+
+  <div id="content">
+    <div class="stats">
+      <div class="stat"><div class="label">🟢 OK</div><div class="value" id="statOk">-</div></div>
+      <div class="stat"><div class="label">🟡 Drop</div><div class="value" id="statDrop">-</div></div>
+      <div class="stat"><div class="label">🔴 Stopped</div><div class="value" id="statStopped">-</div></div>
+    </div>
+    <div class="chips" id="chips">
+      <button class="chip active" data-filter="all">All</button>
+      <button class="chip" data-filter="issues">Issues only</button>
+    </div>
+    <div class="panel">
+      <div class="table-scroll">
+        <table>
+          <thead><tr>
+            <th>Domain</th>
+            <th>7-day trend</th>
+            <th>Status</th>
+          </tr></thead>
+          <tbody id="tblTraffic"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+const API_BASE = "";
+const TOKEN_KEY = "keitaro_dashboard_token";
+const TOKEN_EXPIRY_KEY = "keitaro_dashboard_token_expiry";
+const REMEMBER_MS = 7 * 24 * 60 * 60 * 1000;
+
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function fmtNum(n){return Number(n||0).toLocaleString('en-US');}
+
+let progressTimer = null;
+function setLoading(isLoading){
+  document.getElementById('loadingOverlay').classList.toggle('active', isLoading);
+  document.getElementById('content').style.opacity = isLoading ? '0.5' : '1';
+  const fill = document.getElementById('progressFill');
+  const pctEl = document.getElementById('progressPct');
+  clearInterval(progressTimer);
+  if(isLoading){
+    const startTime = Date.now();
+    const DURATION_MS = 20000;
+    fill.style.width = '0%';
+    pctEl.textContent = 'Loading… 0%';
+    progressTimer = setInterval(()=>{
+      const elapsed = Date.now() - startTime;
+      const pct = Math.min(99, Math.round(elapsed / DURATION_MS * 100));
+      fill.style.width = pct + '%';
+      pctEl.textContent = `Loading… ${pct}%`;
+    }, 200);
+  }
+}
+function setChecking(isChecking){
+  document.getElementById('updatingBadge').classList.toggle('hidden', !isChecking);
+}
+
+let trafficData = [];
+let currentFilter = 'all';
+
+async function fetchDomains(token){
+  const res = await fetch(`${API_BASE}/api/domains`, { headers: { 'x-api-token': token } });
+  if(!res.ok) throw new Error('REQUEST_FAILED_' + res.status);
+  return res.json();
+}
+
+async function fetchTrafficBatch(token, accountIndex, zoneIds){
+  const res = await fetch(`${API_BASE}/api/domains`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-token': token },
+    body: JSON.stringify({ mode: 'traffic', accountIndex, zoneIds }),
+  });
+  if(!res.ok) return [];
+  const data = await res.json();
+  return data.results || [];
+}
+
+async function runTrafficChecks(token){
+  // Group by account (zones from different Cloudflare accounts can't be queried together),
+  // then chunk each account's zones into groups of 10 (Cloudflare's own query limit).
+  const byAccount = new Map();
+  for(const d of trafficData){
+    if(d.accountIndex == null) continue;
+    if(!byAccount.has(d.accountIndex)) byAccount.set(d.accountIndex, []);
+    byAccount.get(d.accountIndex).push(d);
+  }
+  const chunks = [];
+  for(const [accountIndex, domains] of byAccount){
+    for(let i = 0; i < domains.length; i += 10){
+      chunks.push({ accountIndex, domains: domains.slice(i, i + 10) });
+    }
+  }
+
+  setChecking(true);
+  const concurrency = 4;
+  let idx = 0;
+  async function worker(){
+    while(idx < chunks.length){
+      const chunk = chunks[idx++];
+      const zoneIds = chunk.domains.map(d => d.zoneId);
+      const results = await fetchTrafficBatch(token, chunk.accountIndex, zoneIds);
+      const byZone = new Map(results.map(r => [r.zoneId, r]));
+      for(const d of chunk.domains){
+        const r = byZone.get(d.zoneId);
+        if(r){ d.series = r.series; d.status = r.status; d.pctChange = r.pctChange; }
+        else { d.status = 'unknown'; }
+      }
+      renderStats();
+      renderTable();
+    }
+  }
+  await Promise.all(Array.from({ length: concurrency }, worker));
+  setChecking(false);
+}
+
+function sparkline(series){
+  if(!series || series.length < 2) return '<span class="muted" style="padding:0">—</span>';
+  const w=150, h=36, pad=3;
+  const max = Math.max(...series.map(d=>d.requests), 1);
+  const stepX = (w - pad*2) / (series.length - 1);
+  const xAt = i => pad + i*stepX;
+  const yAt = v => pad + (h - pad*2) - (v/max)*(h - pad*2);
+  const pts = series.map((d,i)=>`${xAt(i)},${yAt(d.requests)}`).join(' ');
+  const color = series[series.length-1].requests < series[series.length-2].requests ? '#dc2626' : '#059669';
+  return `<svg class="sparkline" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2"/>
+  </svg>`;
+}
+
+function statusBadge(d){
+  if(d.status === undefined) return `<span class="badge badge-pending">Checking…</span>`;
+  if(d.status === 'stopped') return `<span class="badge badge-stopped">🔴 Stopped</span><span class="pct">${d.pctChange}%</span>`;
+  if(d.status === 'drop') return `<span class="badge badge-drop">🟡 Drop</span><span class="pct">${d.pctChange}%</span>`;
+  if(d.status === 'ok') return `<span class="badge badge-ok">🟢 OK</span><span class="pct">${d.pctChange >= 0 ? '+' : ''}${d.pctChange}%</span>`;
+  return `<span class="badge badge-unknown">No data</span>`;
+}
+
+function renderTable(){
+  const filtered = currentFilter === 'issues'
+    ? trafficData.filter(d => d.status === 'drop' || d.status === 'stopped')
+    : trafficData;
+  const rows = [...filtered].sort((a,b)=>{
+    const sev = s => s === 'stopped' ? 0 : s === 'drop' ? 1 : s === 'ok' ? 2 : 3;
+    return sev(a.status) - sev(b.status);
+  });
+  const tbody = document.getElementById('tblTraffic');
+  if(!rows.length){ tbody.innerHTML = `<tr><td colspan="3" class="muted">No domains match</td></tr>`; return; }
+  tbody.innerHTML = rows.map(d => `
+    <tr>
+      <td class="domain">${esc(d.domain)}</td>
+      <td class="spark">${sparkline(d.series)}</td>
+      <td>${statusBadge(d)}</td>
+    </tr>
+  `).join('');
+}
+
+function renderStats(){
+  document.getElementById('statOk').textContent = trafficData.filter(d => d.status === 'ok').length;
+  document.getElementById('statDrop').textContent = trafficData.filter(d => d.status === 'drop').length;
+  document.getElementById('statStopped').textContent = trafficData.filter(d => d.status === 'stopped').length;
+}
+
+document.getElementById('chips').addEventListener('click', e=>{
+  const chip = e.target.closest('.chip');
+  if(!chip) return;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  currentFilter = chip.dataset.filter;
+  renderTable();
+});
+
+async function loadInto(token){
+  setLoading(true);
+  try{
+    const data = await fetchDomains(token);
+    trafficData = data.domains
+      .filter(d => d.zoneId)
+      .map(d => ({ domain: d.domain, zoneId: d.zoneId, accountIndex: d.accountIndex, series: null, status: undefined, pctChange: null }));
+    document.getElementById('rangeLabel').textContent = `7-day traffic health per domain · updated ${new Date(data.generatedAt).toLocaleString()}`;
+    renderStats();
+    renderTable();
+  } finally {
+    setLoading(false);
+  }
+  runTrafficChecks(token);
+}
+
+document.getElementById('refreshBtn').addEventListener('click', ()=>{
+  const token = localStorage.getItem(TOKEN_KEY);
+  if(token) loadInto(token);
+});
+
+function showApp(){
+  document.getElementById('loginView').classList.add('hidden');
+  document.getElementById('appView').classList.remove('hidden');
+}
+function showLogin(){
+  document.getElementById('loginView').classList.remove('hidden');
+  document.getElementById('appView').classList.add('hidden');
+}
+function clearSession(){
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(TOKEN_EXPIRY_KEY);
+}
+
+async function loginWithPassword(password){
+  document.getElementById('loginError').textContent = '';
+  try{
+    await loadInto(password);
+    localStorage.setItem(TOKEN_KEY, password);
+    localStorage.setItem(TOKEN_EXPIRY_KEY, String(Date.now() + REMEMBER_MS));
+    showApp();
+  } catch {
+    clearSession();
+    document.getElementById('loginError').textContent = 'Incorrect password.';
+  }
+}
+
+async function resumeSession(token){
+  showApp();
+  try{
+    await loadInto(token);
+  } catch(err){
+    if(err && err.message === 'REQUEST_FAILED_401'){
+      clearSession();
+      showLogin();
+      document.getElementById('loginError').textContent = 'Your session expired, please log in again.';
+    } else {
+      document.getElementById('rangeLabel').textContent = 'Error loading data — try refreshing the page';
+    }
+  }
+}
+
+document.getElementById('loginForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  loginWithPassword(document.getElementById('password').value);
+});
+document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  clearSession();
+  location.reload();
+});
+
+const savedToken = localStorage.getItem(TOKEN_KEY);
+const savedExpiry = Number(localStorage.getItem(TOKEN_EXPIRY_KEY) || 0);
+if(savedToken && Date.now() < savedExpiry){
+  resumeSession(savedToken);
+} else {
+  clearSession();
+}
+</script>
+</body>
+</html>

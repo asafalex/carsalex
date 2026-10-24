@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Data Chat - Keitaro</title>
+<style>
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f5f7fb;color:#172033;overflow-x:hidden}
+.wrap{max-width:1000px;margin:auto;padding:24px 14px 40px}
+h1{margin:0 0 6px;font-size:28px}.sub{color:#6b7280;margin-bottom:18px}
+.topbar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+.nav{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.nav a{color:#172033;text-decoration:none;font-size:14px;padding:9px 14px;border-radius:10px;border:1px solid #d1d5db;background:#fff;cursor:pointer}
+.nav a:hover{border-color:#9ca3af}
+.nav a.active{background:#111827;color:#fff;border-color:#111827}
+.login{max-width:420px;margin:12vh auto 0;background:#fff;border:1px solid #e5e7eb;border-radius:20px;padding:26px;box-shadow:0 12px 32px rgba(17,24,39,.08)}
+.login h1{font-size:26px;margin-bottom:8px}.login p{color:#6b7280;margin-top:0}
+input,textarea{padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;font-size:15px;direction:ltr;box-sizing:border-box;max-width:100%;font-family:inherit}
+input[type=password]{width:100%}
+button{border:0;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;cursor:pointer}
+.primary{width:100%;margin-top:12px;background:#111827;color:#fff}
+.logout{background:#fff;border:1px solid #d1d5db}
+.error{color:#b91c1c;margin-top:10px;font-size:14px;min-height:20px}
+.hidden{display:none}
+#chatLog{display:flex;flex-direction:column;gap:16px;margin-bottom:16px;min-height:200px}
+.msg{max-width:100%}
+.msg-user{align-self:flex-end;background:#111827;color:#fff;padding:10px 16px;border-radius:14px 14px 2px 14px;max-width:70%;margin-left:auto}
+.msg-assistant{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:16px 18px;box-shadow:0 8px 24px rgba(17,24,39,.06)}
+.msg-assistant h3{margin:0 0 10px;font-size:16px}
+.msg-caption{color:#374151;margin-bottom:12px;font-size:14px}
+.msg-error{color:#b91c1c;font-size:14px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:7px 10px;border-bottom:1px solid #e5e7eb;text-align:left;white-space:nowrap}
+th{background:#fafafa;font-weight:600;position:sticky;top:0}
+.table-wrap{max-height:360px;overflow:auto;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:12px}
+.sql-detail{margin-top:10px}
+.sql-detail summary{cursor:pointer;font-size:12px;color:#6b7280}
+.sql-detail pre{background:#0b1220;color:#d1e2ff;padding:10px 12px;border-radius:8px;font-size:12px;overflow-x:auto;margin:8px 0 0}
+.meta{margin-top:12px;font-size:11px;color:#9ca3af;border-top:1px solid #f3f4f6;padding-top:8px}
+.chart{width:100%;height:200px;display:block;margin-bottom:12px}
+.composer{display:flex;gap:10px;position:sticky;bottom:12px;background:#f5f7fb;padding-top:8px}
+.composer textarea{flex:1;resize:none;min-height:46px;max-height:140px}
+.composer button{background:#111827;color:#fff;padding:0 20px}
+.spinner-inline{width:16px;height:16px;border:3px solid #d1d5db;border-top-color:#111827;border-radius:50%;animation:spin .8s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.examples{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.examples button{background:#fff;border:1px solid #d1d5db;color:#374151;font-weight:500;font-size:12px;padding:7px 12px}
+.examples button:hover{border-color:#9ca3af}
+@media(max-width:560px){.login{margin:8vh 12px 0}.msg-user{max-width:88%}}
+</style>
+</head>
+<body>
+<section id="loginView" class="login">
+  <h1>Data Chat</h1>
+  <p>Enter the password to ask questions about your data.</p>
+  <form id="loginForm">
+    <input id="password" type="password" autocomplete="current-password" placeholder="Password" required>
+    <button class="primary" type="submit">Login</button>
+    <div id="loginError" class="error"></div>
+  </form>
+</section>
+
+<main id="appView" class="wrap hidden">
+  <div class="topbar">
+    <div><h1>Data Chat</h1><div class="sub">Ask open questions about clicks, regs, FTDs, campaigns, groups, offers and more</div></div>
+    <button id="logoutBtn" class="logout">Logout</button>
+  </div>
+
+    <div class="nav">
+    <a href="keitaro_all.html">Dashboard</a>
+    <a href="chat_all.html" class="active">Chat</a>
+  </div>
+
+  <div class="examples" id="examples">
+    <button data-q="How many clicks, regs and FTDs did we have in the last 7 days?">Last 7 days summary</button>
+    <button data-q="Show FTDs by country for the last 30 days">FTDs by country (30d)</button>
+    <button data-q="Which offer had the best click to FTD rate in the last 90 days?">Best offer (90d)</button>
+    <button data-q="Show clicks by day for the last 14 days">Clicks by day (14d)</button>
+  </div>
+
+  <div id="chatLog"></div>
+
+  <div class="composer">
+    <textarea id="questionInput" placeholder="Ask a question about your data..."></textarea>
+    <button id="sendBtn" type="button">Send</button>
+  </div>
+</main>
+
+<script>
+const API_BASE = "";
+const TOKEN_KEY = "all_dashboard_token";
+const TOKEN_EXPIRY_KEY = "all_dashboard_token_expiry";
+const EXPECTED_SCOPE = "all";
+const REMEMBER_MS = 7 * 24 * 60 * 60 * 1000;
+const ILS_PER_USD = 3.0637;
+
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function fmt(n){return Number(n||0).toLocaleString('en-US');}
+
+function showApp(){
+  document.getElementById('loginView').classList.add('hidden');
+  document.getElementById('appView').classList.remove('hidden');
+}
+function showLogin(){
+  document.getElementById('loginView').classList.remove('hidden');
+  document.getElementById('appView').classList.add('hidden');
+}
+function clearSession(){
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(TOKEN_EXPIRY_KEY);
+}
+
+async function validateToken(token){
+  const res = await fetch(`${API_BASE}/api/keitaro-filters`, { headers: { 'x-api-token': token } });
+  if (!res.ok) throw new Error('REQUEST_FAILED_' + res.status);
+  const data = await res.json();
+  if(data.scope !== EXPECTED_SCOPE) throw new Error('REQUEST_FAILED_401');
+}
+
+async function loginWithPassword(password){
+  document.getElementById('loginError').textContent = '';
+  try{
+    await validateToken(password);
+    localStorage.setItem(TOKEN_KEY, password);
+    localStorage.setItem(TOKEN_EXPIRY_KEY, String(Date.now() + REMEMBER_MS));
+    showApp();
+  } catch {
+    clearSession();
+    document.getElementById('loginError').textContent = 'Incorrect password.';
+  }
+}
+
+async function resumeSession(token){
+  showApp();
+  try{ await validateToken(token); }
+  catch(err){
+    if(err && err.message === 'REQUEST_FAILED_401'){
+      clearSession();
+      showLogin();
+      document.getElementById('loginError').textContent = 'Your session expired, please log in again.';
+    }
+  }
+}
+
+document.getElementById('loginForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  loginWithPassword(document.getElementById('password').value);
+});
+document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  clearSession();
+  location.reload();
+});
+
+// ---- Chat logic ----
+
+function isNumericColumn(rows, col){
+  return rows.every(r => r[col] === null || r[col] === '' || !isNaN(Number(r[col])));
+}
+function isDateLikeColumn(col){
+  return /date|day/i.test(col);
+}
+
+function pickChart(columns, rows){
+  if(rows.length < 2 || rows.length > 90) return null;
+  const numericCols = columns.filter(c => isNumericColumn(rows, c));
+  const labelCol = columns.find(c => !numericCols.includes(c));
+  if(!labelCol || !numericCols.length) return null;
+  const type = isDateLikeColumn(labelCol) ? 'line' : (rows.length <= 20 ? 'bar' : null);
+  if(!type) return null;
+  return { type, labelCol, valueCols: numericCols.slice(0, 3) };
+}
+
+const CHART_COLORS = ['#111827','#2563eb','#059669','#dc2626'];
+
+function renderLineChartSvg(rows, labelCol, valueCols){
+  const w=900, h=200, padL=55, padR=15, padT=15, padB=30;
+  const innerW = w-padL-padR, innerH = h-padT-padB;
+  const max = Math.max(...rows.flatMap(r=>valueCols.map(c=>Number(r[c])||0)), 1);
+  const stepX = rows.length>1 ? innerW/(rows.length-1) : 0;
+  const xAt = i => padL+i*stepX;
+  const yAt = v => padT+innerH-(v/max)*innerH;
+  let grid = '';
+  for(let g=0; g<=4; g++){
+    const y = padT + innerH*g/4;
+    const val = Math.round(max*(1-g/4));
+    grid += `<line x1="${padL}" y1="${y}" x2="${w-padR}" y2="${y}" stroke="#e5e7eb" stroke-width="1"/>`;
+    grid += `<text x="${padL-8}" y="${y+4}" font-size="10" fill="#6b7280" text-anchor="end">${fmt(val)}</text>`;
+  }
+  const paths = valueCols.map((c,ci)=>{
+    const color = CHART_COLORS[ci % CHART_COLORS.length];
+    const pts = rows.map((r,i)=>`${xAt(i)},${yAt(Number(r[c])||0)}`).join(' ');
+    const dots = rows.map((r,i)=>{
+      const v = Number(r[c])||0;
+      return `<circle cx="${xAt(i)}" cy="${yAt(v)}" r="2.5" fill="${color}"><title>${esc(r[labelCol])} - ${esc(c)}: ${fmt(v)}</title></circle>`;
+    }).join('');
+    return `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2"/>${dots}`;
+  }).join('');
+  const labelStep = Math.max(1, Math.ceil(rows.length/8));
+  const labels = rows.map((r,i)=>{
+    if(i % labelStep !== 0) return '';
+    return `<text x="${xAt(i)}" y="${h-8}" font-size="10" fill="#6b7280" text-anchor="middle">${esc(String(r[labelCol]).slice(-5))}</text>`;
+  }).join('');
+  const legend = valueCols.map((c,ci)=>`<span style="color:${CHART_COLORS[ci%CHART_COLORS.length]};font-weight:600">${esc(c)}</span>`).join(' &nbsp; ');
+  return `<div style="font-size:12px;margin-bottom:6px">${legend}</div><svg class="chart" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">${grid}${paths}${labels}</svg>`;
+}
+
+function renderBarChartSvg(rows, labelCol, valueCol){
+  const w=900, h=220, padL=15, padR=15, padT=15, padB=50;
+  const innerW = w-padL-padR, innerH = h-padT-padB;
+  const max = Math.max(...rows.map(r=>Number(r[valueCol])||0), 1);
+  const bw = innerW/rows.length;
+  const bars = rows.map((r,i)=>{
+    const v = Number(r[valueCol])||0;
+    const bh = (v/max)*innerH;
+    const x = padL + i*bw + bw*0.12;
+    const y = padT + innerH - bh;
+    const label = String(r[labelCol]);
+    return `<rect x="${x}" y="${y}" width="${bw*0.76}" height="${bh}" fill="#2563eb"><title>${esc(label)}: ${fmt(v)}</title></rect>
+      <text x="${x+bw*0.38}" y="${h-padB+16}" font-size="10" fill="#6b7280" text-anchor="middle">${esc(label.length>10?label.slice(0,9)+'…':label)}</text>`;
+  }).join('');
+  return `<svg class="chart" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">${bars}</svg>`;
+}
+
+function buildCaption(columns, rows){
+  if(!rows.length) return 'No rows returned.';
+  const numericCols = columns.filter(c => isNumericColumn(rows, c));
+  const parts = [`${fmt(rows.length)} row${rows.length===1?'':'s'}`];
+  numericCols.slice(0,3).forEach(c=>{
+    const sum = rows.reduce((s,r)=>s+(Number(r[c])||0),0);
+    parts.push(`total ${esc(c)}: ${fmt(sum)}`);
+  });
+  return parts.join(' · ');
+}
+
+function renderTable(columns, rows){
+  if(!rows.length) return '';
+  const thead = `<tr>${columns.map(c=>`<th>${esc(c)}</th>`).join('')}</tr>`;
+  const body = rows.map(r=>`<tr>${columns.map(c=>`<td>${esc(r[c])}</td>`).join('')}</tr>`).join('');
+  return `<div class="table-wrap"><table><thead>${thead}</thead><tbody>${body}</tbody></table></div>`;
+}
+
+function addUserMessage(text){
+  const log = document.getElementById('chatLog');
+  const div = document.createElement('div');
+  div.className = 'msg msg-user';
+  div.textContent = text;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+function addAssistantPlaceholder(){
+  const log = document.getElementById('chatLog');
+  const div = document.createElement('div');
+  div.className = 'msg msg-assistant';
+  div.innerHTML = `<span class="spinner-inline"></span>Thinking…`;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+  return div;
+}
+
+function renderAssistantResult(el, data){
+  const { title, sql, columns, rows, usage, costUsd } = data;
+  const chart = pickChart(columns, rows);
+  let chartHtml = '';
+  if(chart && chart.type === 'line') chartHtml = renderLineChartSvg(rows, chart.labelCol, chart.valueCols);
+  else if(chart && chart.type === 'bar') chartHtml = renderBarChartSvg(rows, chart.labelCol, chart.valueCols[0]);
+
+  const costIls = costUsd * ILS_PER_USD;
+  el.innerHTML = `
+    <h3>${esc(title)}</h3>
+    <div class="msg-caption">${esc(buildCaption(columns, rows))}</div>
+    ${chartHtml}
+    ${renderTable(columns, rows)}
+    <details class="sql-detail"><summary>Show SQL</summary><pre>${esc(sql)}</pre></details>
+    <div class="meta">Tokens: ${fmt(usage.total_tokens)} (prompt: ${fmt(usage.prompt_tokens)}, completion: ${fmt(usage.completion_tokens)}) · Cost: $${costUsd.toFixed(5)} (~₪${costIls.toFixed(5)})</div>
+  `;
+}
+
+function renderAssistantError(el, err){
+  const usage = err.usage || { prompt_tokens:0, completion_tokens:0, total_tokens:0 };
+  const costUsd = err.costUsd || 0;
+  const costIls = costUsd * ILS_PER_USD;
+  el.innerHTML = `
+    <div class="msg-error">⚠ ${esc(err.message || 'Something went wrong.')}</div>
+    <div class="meta">Tokens: ${fmt(usage.total_tokens)} (prompt: ${fmt(usage.prompt_tokens)}, completion: ${fmt(usage.completion_tokens)}) · Cost: $${costUsd.toFixed(5)} (~₪${costIls.toFixed(5)})</div>
+  `;
+}
+
+async function askQuestion(question){
+  if(!question.trim()) return;
+  addUserMessage(question);
+  const placeholder = addAssistantPlaceholder();
+  const token = localStorage.getItem(TOKEN_KEY);
+  try{
+    const res = await fetch(`${API_BASE}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-token': token },
+      body: JSON.stringify({ question }),
+    });
+    const data = await res.json();
+    if(!res.ok){
+      if(res.status === 401){
+        clearSession();
+        showLogin();
+        return;
+      }
+      renderAssistantError(placeholder, data);
+      return;
+    }
+    renderAssistantResult(placeholder, data);
+  } catch(err){
+    renderAssistantError(placeholder, { message: 'Network error — please try again.' });
+  } finally {
+    document.getElementById('chatLog').scrollTop = document.getElementById('chatLog').scrollHeight;
+  }
+}
+
+document.getElementById('sendBtn').addEventListener('click', ()=>{
+  const input = document.getElementById('questionInput');
+  const q = input.value;
+  input.value = '';
+  askQuestion(q);
+});
+document.getElementById('questionInput').addEventListener('keydown', e=>{
+  if(e.key === 'Enter' && !e.shiftKey){
+    e.preventDefault();
+    document.getElementById('sendBtn').click();
+  }
+});
+document.getElementById('examples').addEventListener('click', e=>{
+  const btn = e.target.closest('button[data-q]');
+  if(btn) askQuestion(btn.dataset.q);
+});
+
+const savedToken = localStorage.getItem(TOKEN_KEY);
+const savedExpiry = Number(localStorage.getItem(TOKEN_EXPIRY_KEY) || 0);
+if(savedToken && Date.now() < savedExpiry){
+  resumeSession(savedToken);
+} else {
+  clearSession();
+}
+</script>
+</body>
+</html>

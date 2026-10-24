@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Keitaro Groups - Domains & Campaigns Summary</title>
+<style>
+:root{color-scheme:light}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f7f8fa;color:#172033;overflow-x:hidden}
+.wrap{max-width:1400px;margin:auto;padding:24px 14px 40px}
+h1{margin:0 0 6px;font-size:28px}.sub{color:#6b7280;margin-bottom:18px}
+.topbar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+.nav{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.nav a{color:#172033;text-decoration:none;font-size:14px;padding:9px 14px;border-radius:10px;border:1px solid #d1d5db;background:#fff;cursor:pointer}
+.nav a:hover{border-color:#9ca3af}
+.nav a.active{background:#111827;color:#fff;border-color:#111827}
+.login{max-width:420px;margin:12vh auto 0;background:#fff;border:1px solid #e5e7eb;border-radius:20px;padding:26px;box-shadow:0 12px 32px rgba(17,24,39,.08)}
+.login h1{font-size:26px;margin-bottom:8px}.login p{color:#6b7280;margin-top:0}
+input{padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;font-size:15px;box-sizing:border-box;max-width:100%}
+input[type=password]{width:100%}
+button{border:0;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;cursor:pointer}
+.primary{width:100%;margin-top:12px;background:#111827;color:#fff}
+.logout{background:#fff;border:1px solid #d1d5db}
+.error{color:#b91c1c;margin-top:10px;font-size:14px;min-height:20px}
+.hidden{display:none}
+.loading-overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;gap:12px;flex-direction:column;background:rgba(247,248,250,.85);z-index:50;opacity:0;pointer-events:none;transition:opacity .15s}
+.loading-overlay.active{opacity:1;pointer-events:auto}
+.progress-bar-track{width:220px;height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden}
+.progress-bar-fill{height:100%;width:0%;background:#111827;border-radius:999px;transition:width .2s linear}
+.loading-overlay span{font-size:14px;color:#6b7280;font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.stat{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:13px 14px;box-shadow:0 8px 20px rgba(17,24,39,.05)}
+.stat .label{font-size:12px;color:#6b7280;margin-bottom:4px;white-space:nowrap}
+.stat .value{font-size:22px;font-weight:700}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.toolbar input[type=text]{flex:1 1 220px;min-width:0}
+.panel{background:#fff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;box-shadow:0 8px 24px rgba(17,24,39,.05)}
+.table-scroll{overflow:auto;max-height:70vh}
+table{width:100%;border-collapse:collapse}
+th,td{padding:9px 12px;border-bottom:1px solid #eef0f3;text-align:left;font-size:13px;white-space:nowrap}
+th{background:#fafbfc;font-weight:600;position:sticky;top:0;z-index:1;cursor:pointer;user-select:none}
+th:hover{color:#111827}
+th .arrow{font-size:10px;margin-left:4px;color:#9ca3af}
+tr:hover td{background:#fafbfc}
+td.group{font-weight:600}
+.badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;background:#e5e7eb;color:#374151}
+.badge-new{background:#bbf7d0;color:#14532d}
+.muted{color:#6b7280;padding:20px;text-align:center}
+#content{transition:opacity .15s}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.actions button{background:#fff;border:1px solid #d1d5db;color:#374151;font-size:13px}
+.actions button:hover{border-color:#9ca3af}
+@media(max-width:1100px){.stats{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<section id="loginView" class="login">
+  <h1>Keitaro Groups</h1>
+  <p>Enter the password to view the domains & campaigns summary by group.</p>
+  <form id="loginForm">
+    <input id="password" type="password" autocomplete="current-password" placeholder="Password" required>
+    <button class="primary" type="submit">Login</button>
+    <div id="loginError" class="error"></div>
+  </form>
+</section>
+
+<div id="loadingOverlay" class="loading-overlay"><div class="progress-bar-track"><div class="progress-bar-fill" id="progressFill"></div></div><span id="progressPct">Loading… 0%</span></div>
+
+<main id="appView" class="wrap hidden">
+  <div class="topbar">
+    <div><h1>Keitaro Groups</h1><div class="sub" id="rangeLabel">Domains & campaigns summary, by group (amz Keitaro system)</div></div>
+    <button id="refreshBtn" class="logout" type="button">↻ Refresh</button>
+    <button id="logoutBtn" class="logout">Logout</button>
+  </div>
+
+  <div class="nav">
+    <a href="keitaro-mbm.html">General Dashboard</a>
+    <a href="keitaro-groups-mbm.html">By Group</a>
+    <a href="ltv.html">LTV Report</a>
+    <a href="ranking.html">Ranking</a>
+    <a href="commission.html">Commission</a>
+    <a href="commission_worker.html">Commission Worker</a>
+    <a href="operations.html">Operations Report</a>
+    <a href="operations-september.html">Operations September</a>
+    <a href="ftd.html">FTD</a>
+    <a href="offer-mbm.html">Offer</a>
+    <a href="chat-mbm.html">Chat</a>
+    <a href="domain.html">Domains</a>
+    <a href="domain_traffic.html">Traffic</a>
+    <a href="keitaro_domains.html">Domains (DB)</a>
+    <a href="onesignal.html">OneSignal</a>
+    <a href="zone.html">Zones</a>
+    <a href="keitaro_amz_group.html" class="active">Keitaro Groups</a>
+    <a href="namecheap.html">Namecheap</a>
+  </div>
+
+  <div id="content">
+    <div class="stats">
+      <div class="stat"><div class="label">Groups</div><div class="value" id="statGroups">-</div></div>
+      <div class="stat"><div class="label">Total Domains</div><div class="value" id="statDomains">-</div></div>
+      <div class="stat"><div class="label">Total Campaigns</div><div class="value" id="statCampaigns">-</div></div>
+      <div class="stat"><div class="label">🆕 New This Week</div><div class="value" id="statNew">-</div></div>
+    </div>
+
+    <div class="toolbar">
+      <input type="text" id="searchBox" placeholder="Search group...">
+    </div>
+    <div class="actions">
+      <button id="exportCsvBtn" type="button">⬇ Export CSV</button>
+    </div>
+
+    <div class="panel">
+      <div class="table-scroll">
+        <table>
+          <thead><tr>
+            <th class="sortable" data-sort="group" data-label="Group">Group</th>
+            <th class="sortable" data-sort="domainCount" data-label="Domains">Domains</th>
+            <th class="sortable" data-sort="totalCampaigns" data-label="Campaigns">Campaigns</th>
+            <th class="sortable" data-sort="campaignsThisWeek" data-label="New This Week">New This Week</th>
+          </tr></thead>
+          <tbody id="tblGroups"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+const API_BASE = "";
+const TOKEN_KEY = "keitaro_dashboard_token";
+const TOKEN_EXPIRY_KEY = "keitaro_dashboard_token_expiry";
+const REMEMBER_MS = 7 * 24 * 60 * 60 * 1000;
+
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function fmtNum(n){ return Number(n||0).toLocaleString('en-US'); }
+
+let progressTimer = null;
+function setLoading(isLoading){
+  document.getElementById('loadingOverlay').classList.toggle('active', isLoading);
+  document.getElementById('content').style.opacity = isLoading ? '0.5' : '1';
+  const fill = document.getElementById('progressFill');
+  const pctEl = document.getElementById('progressPct');
+  clearInterval(progressTimer);
+  if(isLoading){
+    const startTime = Date.now();
+    const DURATION_MS = 8000;
+    fill.style.width = '0%';
+    pctEl.textContent = 'Loading… 0%';
+    progressTimer = setInterval(()=>{
+      const elapsed = Date.now() - startTime;
+      const pct = Math.min(99, Math.round(elapsed / DURATION_MS * 100));
+      fill.style.width = pct + '%';
+      pctEl.textContent = `Loading… ${pct}%`;
+    }, 200);
+  }
+}
+
+let groupsData = [];
+
+async function fetchGroups(token){
+  const res = await fetch(`${API_BASE}/api/keitaro_amz_group`, { headers: { 'x-api-token': token } });
+  if(!res.ok) throw new Error('REQUEST_FAILED_' + res.status);
+  return res.json();
+}
+
+const tableSort = { key: 'totalCampaigns', dir: 'desc' };
+
+function sortRows(rows){
+  const { key, dir } = tableSort;
+  const mul = dir === 'asc' ? 1 : -1;
+  return [...rows].sort((a,b)=>{
+    if(key === 'domainCount' || key === 'totalCampaigns' || key === 'campaignsThisWeek'){
+      return ((a[key]||0) - (b[key]||0)) * mul;
+    }
+    let av = String(a[key] ?? '').toLowerCase(), bv = String(b[key] ?? '').toLowerCase();
+    if(av < bv) return -1*mul;
+    if(av > bv) return 1*mul;
+    return 0;
+  });
+}
+
+function renderTableHeaders(){
+  document.querySelectorAll('th.sortable').forEach(th=>{
+    const sortKey = th.dataset.sort, label = th.dataset.label;
+    const active = tableSort.key === sortKey;
+    const arrow = active ? (tableSort.dir === 'asc' ? '▲' : '▼') : '';
+    th.innerHTML = `${esc(label)}${arrow ? ` <span class="arrow">${arrow}</span>` : ''}`;
+  });
+}
+
+function matchesSearch(g, q){
+  if(!q) return true;
+  return g.group.toLowerCase().includes(q.toLowerCase());
+}
+
+function renderTable(){
+  const q = document.getElementById('searchBox').value.trim();
+  const filtered = groupsData.filter(g => matchesSearch(g, q));
+  const rows = sortRows(filtered);
+  const tbody = document.getElementById('tblGroups');
+  if(!rows.length){ tbody.innerHTML = `<tr><td colspan="4" class="muted">No groups match</td></tr>`; return; }
+  tbody.innerHTML = rows.map(g => `
+    <tr>
+      <td class="group">${esc(g.group)}</td>
+      <td>${fmtNum(g.domainCount)}</td>
+      <td>${fmtNum(g.totalCampaigns)}</td>
+      <td>${g.campaignsThisWeek > 0 ? `<span class="badge badge-new">+${fmtNum(g.campaignsThisWeek)}</span>` : fmtNum(g.campaignsThisWeek)}</td>
+    </tr>
+  `).join('');
+}
+
+function renderStats(){
+  document.getElementById('statGroups').textContent = groupsData.length;
+  document.getElementById('statDomains').textContent = fmtNum(groupsData.reduce((s,g)=>s+g.domainCount,0));
+  document.getElementById('statCampaigns').textContent = fmtNum(groupsData.reduce((s,g)=>s+g.totalCampaigns,0));
+  document.getElementById('statNew').textContent = fmtNum(groupsData.reduce((s,g)=>s+g.campaignsThisWeek,0));
+}
+
+function renderAll(){
+  renderTableHeaders();
+  renderStats();
+  renderTable();
+}
+
+document.querySelectorAll('th.sortable').forEach(th=>{
+  th.addEventListener('click', ()=>{
+    const sortKey = th.dataset.sort;
+    if(tableSort.key === sortKey){ tableSort.dir = tableSort.dir === 'asc' ? 'desc' : 'asc'; }
+    else { tableSort.key = sortKey; tableSort.dir = 'asc'; }
+    renderTableHeaders();
+    renderTable();
+  });
+});
+
+document.getElementById('searchBox').addEventListener('input', renderTable);
+
+document.getElementById('exportCsvBtn').addEventListener('click', ()=>{
+  const q = document.getElementById('searchBox').value.trim();
+  const filtered = sortRows(groupsData.filter(g => matchesSearch(g, q)));
+  const header = ['Group','Domains','Campaigns','New This Week'];
+  const csvEsc = v => `"${String(v??'').replace(/"/g,'""')}"`;
+  const lines = [header.map(csvEsc).join(',')];
+  filtered.forEach(g=>{
+    lines.push([g.group, g.domainCount, g.totalCampaigns, g.campaignsThisWeek].map(csvEsc).join(','));
+  });
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `keitaro_groups_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+});
+
+async function loadInto(token){
+  setLoading(true);
+  try{
+    const data = await fetchGroups(token);
+    groupsData = data.groups;
+    document.getElementById('rangeLabel').textContent = `Domains & campaigns summary, by group (amz Keitaro system) · updated ${new Date(data.generatedAt).toLocaleString()}`;
+    renderAll();
+  } finally {
+    setLoading(false);
+  }
+}
+
+document.getElementById('refreshBtn').addEventListener('click', ()=>{
+  const token = localStorage.getItem(TOKEN_KEY);
+  if(token) loadInto(token);
+});
+
+function showApp(){
+  document.getElementById('loginView').classList.add('hidden');
+  document.getElementById('appView').classList.remove('hidden');
+}
+function showLogin(){
+  document.getElementById('loginView').classList.remove('hidden');
+  document.getElementById('appView').classList.add('hidden');
+}
+function clearSession(){
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(TOKEN_EXPIRY_KEY);
+}
+
+async function loginWithPassword(password){
+  document.getElementById('loginError').textContent = '';
+  try{
+    await loadInto(password);
+    localStorage.setItem(TOKEN_KEY, password);
+    localStorage.setItem(TOKEN_EXPIRY_KEY, String(Date.now() + REMEMBER_MS));
+    showApp();
+  } catch {
+    clearSession();
+    document.getElementById('loginError').textContent = 'Incorrect password.';
+  }
+}
+
+async function resumeSession(token){
+  showApp();
+  try{
+    await loadInto(token);
+  } catch(err){
+    if(err && err.message === 'REQUEST_FAILED_401'){
+      clearSession();
+      showLogin();
+      document.getElementById('loginError').textContent = 'Your session expired, please log in again.';
+    } else {
+      document.getElementById('rangeLabel').textContent = 'Error loading data — try refreshing the page';
+    }
+  }
+}
+
+document.getElementById('loginForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  loginWithPassword(document.getElementById('password').value);
+});
+document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  clearSession();
+  location.reload();
+});
+
+const savedToken = localStorage.getItem(TOKEN_KEY);
+const savedExpiry = Number(localStorage.getItem(TOKEN_EXPIRY_KEY) || 0);
+if(savedToken && Date.now() < savedExpiry){
+  resumeSession(savedToken);
+} else {
+  clearSession();
+}
+</script>
+</body>
+</html>

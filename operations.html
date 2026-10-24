@@ -1,0 +1,1044 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>[hidden]{display:none!important}.site-menu{display:flex;gap:10px;flex-wrap:wrap;padding:20px;direction:ltr}.site-menu a,.site-menu button{padding:10px 14px;border:1px solid #ccc;border-radius:10px;background:white;color:#172033;text-decoration:none;font:14px Arial;cursor:pointer}.site-menu a[aria-current]{background:#111827;color:white}.site-login{max-width:380px;margin:12vh auto;padding:26px;background:white;color:#172033;border-radius:18px;font-family:Arial;direction:ltr}.site-login input{width:100%;box-sizing:border-box;padding:12px}.site-login button{margin-top:12px;padding:12px;width:100%;cursor:pointer}</style></head>
+<body><section id="loginView" class="site-login"><h1>Dashboard Login</h1><form id="loginForm"><input id="password" type="password" placeholder="Password" autocomplete="current-password" required><button type="submit">Login</button><p id="loginError"></p></form></section><div id="appView" hidden><nav class="site-menu" aria-label="Dashboard navigation"><a href="keitaro-mbm.html">General Dashboard</a><a href="keitaro-groups-mbm.html">By Group</a><a href="ltv.html">LTV Report</a><a href="ranking.html">Ranking</a><a href="commission.html">Commission</a><a href="commission_worker.html">Commission Worker</a><a href="operations.html" aria-current="page">Operations Report</a>
+<a href="operations-september.html">Operations September</a><a href="ftd.html">FTD</a><a href="offer-mbm.html">Offer</a><a href="chat-mbm.html">Chat</a><a href="domain.html">Domains</a><a href="domain_traffic.html">Traffic</a><a href="keitaro_domains.html">Domains (DB)</a>
+    <a href="onesignal.html">OneSignal</a>
+    <a href="zone.html">Zones</a>
+    <a href="keitaro_amz_group.html">Keitaro Groups</a>
+    <a href="namecheap.html">Namecheap</a><button id="logoutBtn" type="button">Logout</button></nav>
+<title>דוח תפעולי אוגוסט 2026</title>
+<meta name="description" content="דשבורד KPIs לביצועי צוות פרסום האפליקציות, פלטפורמות ועלויות לחודש אוגוסט 2026" />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@500;600;700;800&family=Heebo:wght@400;500;600&display=swap');
+
+  :root {
+    color-scheme: light;
+    --page:        #f9f9f7;
+    --surface:     #fcfcfb;
+    --surface-2:   #f3f2ee;
+    --ink:         #0b0b0b;
+    --ink-2:       #52514e;
+    --muted:       #898781;
+    --grid:        #e1e0d9;
+    --baseline:    #c3c2b7;
+    --border:      rgba(11,11,11,0.10);
+    --good-text:   #006300;
+
+    --s1: #2a78d6; /* blue      - clicks / accounts */
+    --s2: #eb6834; /* orange    - ftds / freelancers */
+    --s3: #1baf7a; /* aqua      - other expenses */
+    --s4: #eda100; /* yellow    - samsung */
+    --s5: #e87ba4; /* magenta   - huawei */
+    --s6: #008300; /* green     - xiaomi */
+    --s7: #4a3aa7; /* violet */
+
+    --good: #0ca30c;
+    --warning: #fab219;
+    --serious: #ec835a;
+    --critical: #d03b3b;
+
+    --shadow: 0 1px 2px rgba(11,11,11,0.04), 0 8px 24px -12px rgba(11,11,11,0.12);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page:      #0d0d0d;
+      --surface:   #1a1a19;
+      --surface-2: #202020;
+      --ink:       #ffffff;
+      --ink-2:     #c3c2b7;
+      --muted:     #898781;
+      --grid:      #2c2c2a;
+      --baseline:  #383835;
+      --border:    rgba(255,255,255,0.10);
+      --good-text: #0ca30c;
+
+      --s1: #3987e5;
+      --s2: #d95926;
+      --s3: #199e70;
+      --s4: #c98500;
+      --s5: #d55181;
+      --s6: #008300;
+      --s7: #9085e9;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page:      #0d0d0d;
+    --surface:   #1a1a19;
+    --surface-2: #202020;
+    --ink:       #ffffff;
+    --ink-2:     #c3c2b7;
+    --muted:     #898781;
+    --grid:      #2c2c2a;
+    --baseline:  #383835;
+    --border:    rgba(255,255,255,0.10);
+    --good-text: #0ca30c;
+
+    --s1: #3987e5;
+    --s2: #d95926;
+    --s3: #199e70;
+    --s4: #c98500;
+    --s5: #d55181;
+    --s6: #008300;
+    --s7: #9085e9;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--page);
+    color: var(--ink);
+    font-family: 'Heebo', system-ui, -apple-system, "Segoe UI", sans-serif;
+    direction: rtl;
+    -webkit-font-smoothing: antialiased;
+  }
+  .en { direction: ltr; unicode-bidi: isolate; font-variant-numeric: tabular-nums; }
+
+  h1, h2, h3, .display { font-family: 'Rubik', 'Heebo', system-ui, sans-serif; text-wrap: balance; }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 20px 64px; }
+
+  header.top {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
+    flex-wrap: wrap;
+    padding-bottom: 20px; margin-bottom: 22px;
+    border-bottom: 1px solid var(--border);
+  }
+  header.top .titles h1 { font-size: 26px; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.01em; }
+  header.top .titles p { margin: 0; color: var(--ink-2); font-size: 14.5px; }
+  header.top .badge {
+    font-family: 'Rubik', sans-serif; font-weight: 600; font-size: 13px;
+    background: var(--s1); color: #fff; padding: 6px 14px; border-radius: 100px;
+    white-space: nowrap;
+  }
+
+  .note {
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 16px; font-size: 13px; color: var(--ink-2); margin-bottom: 28px; line-height: 1.6;
+  }
+  .note b { color: var(--ink); }
+
+  section { margin-bottom: 36px; }
+  section > h2 {
+    font-size: 16px; font-weight: 700; margin: 0 0 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  section > h2 .sub { font-weight: 500; font-size: 12.5px; color: var(--muted); font-family: 'Heebo'; }
+
+  /* stat tiles */
+  .tiles {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px;
+  }
+  .tile {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px 16px 14px; box-shadow: var(--shadow);
+    display: flex; flex-direction: column; gap: 6px; min-width: 0;
+  }
+  .tile .label { font-size: 12px; color: var(--muted); font-weight: 500; }
+  .tile .value { font-family: 'Rubik', sans-serif; font-size: 25px; font-weight: 700; direction: ltr; text-align: right; }
+  .tile .delta { font-size: 12px; color: var(--ink-2); }
+  .tile .delta b { color: var(--good-text); font-weight: 600; }
+
+  .panel {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 20px 22px; box-shadow: var(--shadow);
+  }
+  .grid-2 { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; align-items: stretch; }
+
+  /* funnel */
+  .funnel-row { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .funnel-row:last-child { margin-bottom: 0; }
+  .funnel-label { width: 150px; flex-shrink: 0; font-size: 13.5px; color: var(--ink-2); font-weight: 500; }
+  .funnel-track { flex: 1; height: 30px; background: var(--surface-2); border-radius: 6px; position: relative; overflow: hidden; }
+  .funnel-fill { height: 100%; border-radius: 6px; display: flex; align-items: center; }
+  .funnel-value {
+    font-family: 'Rubik', sans-serif; font-weight: 700; font-size: 14px; direction: ltr;
+    padding: 0 10px; white-space: nowrap;
+  }
+  .funnel-conv { width: 90px; flex-shrink: 0; text-align: left; font-size: 12.5px; color: var(--muted); direction: ltr; }
+  .funnel-conv b { color: var(--ink); font-weight: 600; }
+
+  /* legend */
+  .legend { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-top: 14px; }
+  .legend-item { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--ink-2); }
+  .swatch { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+  svg { direction: ltr; }
+  svg text { font-family: 'Heebo', sans-serif; fill: var(--ink-2); }
+  .bar-tooltip {
+    position: absolute; pointer-events: none; background: var(--ink); color: var(--page);
+    font-size: 12px; padding: 6px 10px; border-radius: 8px; white-space: nowrap;
+    transform: translate(-50%, -115%); opacity: 0; transition: opacity .1s; z-index: 5;
+    font-family: 'Heebo', sans-serif; direction: rtl;
+  }
+  .chart-wrap { position: relative; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  thead th {
+    text-align: right; font-weight: 600; color: var(--muted); font-size: 11.5px;
+    text-transform: uppercase; letter-spacing: 0.03em; padding: 0 10px 10px; border-bottom: 1px solid var(--grid);
+  }
+  thead th.num, tbody td.num { text-align: left; }
+  tbody td { padding: 10px 10px; border-bottom: 1px solid var(--grid); }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody td.num { direction: ltr; font-variant-numeric: tabular-nums; font-weight: 500; }
+  tbody td.name { font-weight: 600; }
+  .owner-tag { display: inline-flex; align-items: center; gap: 6px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .muted-cell { color: var(--muted); }
+  .table-scroll { overflow-x: auto; }
+
+  .two-tables { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+  /* filter pills */
+  .filterbar { display: flex; flex-direction: column; gap: 10px; margin-bottom: 22px; }
+  .filter-group { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .filter-group-label { font-size: 12.5px; color: var(--muted); font-weight: 500; flex-shrink: 0; margin-inline-end: 2px; }
+  .pill {
+    font-family: 'Heebo', sans-serif; font-size: 13px; font-weight: 500;
+    padding: 7px 14px; border-radius: 100px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--ink-2); cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px; transition: background .12s, color .12s, border-color .12s;
+  }
+  .pill:hover { border-color: var(--s1); color: var(--ink); }
+  .pill.active { background: var(--s1); border-color: var(--s1); color: #fff; font-weight: 600; }
+  .pill .dot { width: 7px; height: 7px; }
+
+  .owner-link { cursor: pointer; }
+  .owner-link:hover { color: var(--s1); text-decoration: underline; }
+
+  .filter-banner {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 16px; margin-bottom: 22px; font-size: 13.5px;
+  }
+  .filter-banner b { font-family: 'Rubik'; }
+  .filter-banner button {
+    font-family: 'Heebo'; font-size: 12.5px; font-weight: 600; cursor: pointer;
+    background: transparent; border: 1px solid var(--border); color: var(--ink);
+    border-radius: 100px; padding: 5px 12px;
+  }
+  .filter-banner button:hover { border-color: var(--s1); color: var(--s1); }
+
+  th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+  th.sortable:hover { color: var(--ink); }
+  th.sortable .arrow { font-size: 9px; margin-inline-start: 3px; opacity: 0.5; }
+  th.sortable.active .arrow { opacity: 1; color: var(--s1); }
+
+  tbody tr.totals-row td { border-top: 2px solid var(--baseline); border-bottom: none; font-weight: 700; padding-top: 12px; }
+  tbody tr.totals-row td.name { color: var(--ink); }
+  tfoot td { padding: 10px 10px; border-top: 2px solid var(--baseline); font-weight: 700; }
+  tfoot td.num { direction: ltr; }
+
+  footer {
+    margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--border);
+    font-size: 12px; color: var(--muted); text-align: center;
+  }
+
+  @media (max-width: 1100px) {
+    .two-tables { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 900px) {
+    .tiles { grid-template-columns: repeat(3, 1fr); }
+    .grid-2, .two-tables { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .tiles { grid-template-columns: repeat(2, 1fr); }
+    .funnel-label { width: 100px; font-size: 12px; }
+    .funnel-conv { width: 60px; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="top">
+    <div class="titles">
+      <h1>דוח תפעולי — צוות פרסום האפליקציות</h1>
+      <p>נתוני אוגוסט 2026 · <span class="en">8</span> חברי צוות · <span class="en">7</span> פלטפורמות (Android, iOS, Windows, Samsung, Huawei, Xiaomi, Vivo)</p>
+    </div>
+    <div class="badge">אוגוסט 2026</div>
+  </header>
+
+  <div class="note">
+    <b>לגבי הנתונים:</b> המקור הוא קובץ ה-Excel החודשי של הצוות (גיליון לכל איש צוות), כולל גיליון ה-"profit" להכנסות; עודכן לנתוני ה-Excel המסונכרן מ-SharePoint (ספטמבר 2026). שדה "לחיצות ייחודיות" לא דווח על ידי <b>Rotem</b> ו-<b>Kristina</b> ולכן אינו כלול במשפך הראשי — הוא מוצג בטבלת הפירוט למי שדיווח עליו. עלות "נדרש לחודש הבא" בחשבונות אינה נכללת בעלות החודש הנוכחי (זהו תקציב מתוכנן, לא הוצאה בפועל). באותו אופן, שורות פרילנסרים המתוארכות לספטמבר/אוקטובר 2026 (תוכניות גיוס עתידיות שנמצאו בגיליונות <b>Rotem</b> ו-<b>Tom</b>) הוצאו מחישוב עלות אוגוסט.
+  </div>
+
+  <div class="filterbar" id="filterbar"></div>
+  <div class="filter-banner" id="filterBanner" hidden></div>
+
+  <section>
+    <h2 id="tilesTitle">מבט על</h2>
+    <div class="tiles" id="tiles"></div>
+  </section>
+
+  <section>
+    <h2 id="funnelTitle">משפך המרה <span class="sub" id="funnelSub">לחיצות → הרשמות → הפקדות ראשונות (FTD), סה״כ צוות</span></h2>
+    <div class="panel" id="funnel"></div>
+  </section>
+
+  <section>
+    <div class="grid-2">
+      <div class="panel">
+        <h2 style="margin-bottom:2px" id="barsTitle">הרשמות והפקדות לפי איש צוות</h2>
+        <div class="sub" style="margin-bottom:14px" id="barsSub">ממוין לפי הפקדות ראשונות (FTD) · לחצו על שם כדי לצפות רק בנתוניו</div>
+        <div class="chart-wrap" id="ownerBars"></div>
+        <div class="legend">
+          <div class="legend-item"><span class="swatch" style="background:var(--s1)"></span>הרשמות</div>
+          <div class="legend-item"><span class="swatch" style="background:var(--s2)"></span>הפקדות ראשונות (FTD)</div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2 style="margin-bottom:2px" id="donutTitle">אפליקציות פעילות לפי פלטפורמה</h2>
+        <div class="sub" style="margin-bottom:14px" id="donutSub">סה״כ <span class="en">518</span> אפליקציות חיות</div>
+        <div class="chart-wrap" id="donut"></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2 id="costTitle">פילוח עלויות לפי איש צוות <span class="sub" id="costSub">חשבונות שנרכשו · פרילנסרים · הוצאות נוספות · משכורות (USD)</span></h2>
+    <div class="panel chart-wrap" id="costBars"></div>
+    <div class="legend" id="costLegend">
+      <div class="legend-item"><span class="swatch" style="background:var(--s1)"></span>חשבונות שנרכשו</div>
+      <div class="legend-item"><span class="swatch" style="background:var(--s2)"></span>פרילנסרים</div>
+      <div class="legend-item"><span class="swatch" style="background:var(--s3)"></span>הוצאות נוספות</div>
+      <div class="legend-item" id="salaryLegendItem"><span class="swatch" style="background:var(--s4)"></span>משכורות</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>הוצאות בולטות</h2>
+    <div class="two-tables">
+      <div class="panel">
+        <h3 style="margin:0 0 12px;font-size:14px" id="freeTitle">פרילנסרים — עלות גבוהה ביותר</h3>
+        <div class="table-scroll"><table id="tblFree"></table></div>
+      </div>
+      <div class="panel">
+        <h3 style="margin:0 0 12px;font-size:14px" id="expTitle">כלים והוצאות תפעול — עלות גבוהה ביותר</h3>
+        <div class="table-scroll"><table id="tblExp"></table></div>
+      </div>
+      <div class="panel">
+        <h3 style="margin:0 0 12px;font-size:14px" id="salaryTitle">משכורות — עלות גבוהה ביותר</h3>
+        <div class="table-scroll"><table id="tblSalary"></table></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2 id="ownersTableTitle">פירוט מלא לפי איש צוות <span class="sub">לחצו על כותרת עמודה למיון</span></h2>
+    <div class="panel table-scroll">
+      <table id="tblOwners"></table>
+    </div>
+  </section>
+
+  <section>
+    <h2 id="profitTitle">רווחיות לפי איש צוות <span class="sub">הכנסה (גיליון "profit", USD) פחות עלות תפעולית · לחצו על שם לסינון</span></h2>
+    <div class="tiles" id="profitTiles" style="margin-bottom:18px"></div>
+    <div class="panel table-scroll">
+      <table id="tblProfit"></table>
+    </div>
+    <p class="note" id="profitNote" style="margin-top:14px"></p>
+  </section>
+
+  <footer>דשבורד נבנה אוטומטית מקובץ ה-Excel החודשי · MobileBrain</footer>
+</div>
+
+<script>
+const DATA = {"owners":["Alon","Damien","Ehod","Kristina","Lera","Rotem","Tom","Yuval"],"platforms":["android","huawei","ios","samsung","vivo","windows","xiaomi"],"per_owner":{"Alon":{"clicks":273359,"unique_clicks":50197,"registrations":359,"ftds":194,"live_apps":0,"submitted":4,"approved":0,"in_review":0,"removed":0,"accounts_live":0,"accounts_bought":0,"accounts_bought_cost":0,"accounts_needed":0,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":0,"reg_rate":0.13,"ftd_rate":54.04,"salary_cost":8500.0},"Damien":{"clicks":25219,"unique_clicks":10041,"registrations":322,"ftds":73,"live_apps":28,"submitted":18,"approved":8,"in_review":10,"removed":0,"accounts_live":25,"accounts_bought":7,"accounts_bought_cost":1380,"accounts_needed":0,"freelancer_cost":0,"other_expenses_cost":580,"total_cost":1960,"reg_rate":1.28,"ftd_rate":22.67,"salary_cost":3700.0},"Ehod":{"clicks":87128,"unique_clicks":27676,"registrations":424,"ftds":261,"live_apps":56,"submitted":112,"approved":44,"in_review":15,"removed":7,"accounts_live":64,"accounts_bought":0,"accounts_bought_cost":0,"accounts_needed":0,"freelancer_cost":5200,"other_expenses_cost":947,"total_cost":6147,"reg_rate":0.49,"ftd_rate":61.56,"salary_cost":11400.0},"Kristina":{"clicks":4,"unique_clicks":0,"registrations":0,"ftds":0,"live_apps":7,"submitted":9,"approved":5,"in_review":3,"removed":0,"accounts_live":0,"accounts_bought":10,"accounts_bought_cost":4700,"accounts_needed":10,"freelancer_cost":0,"other_expenses_cost":500,"total_cost":5200,"reg_rate":0.0,"ftd_rate":null,"salary_cost":11033.33},"Lera":{"clicks":205,"unique_clicks":135,"registrations":0,"ftds":0,"live_apps":6,"submitted":10,"approved":8,"in_review":0,"removed":2,"accounts_live":35,"accounts_bought":2,"accounts_bought_cost":950,"accounts_needed":0,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":950,"reg_rate":0.0,"ftd_rate":null,"salary_cost":0},"Rotem":{"clicks":128360,"unique_clicks":0,"registrations":7024,"ftds":1700,"live_apps":420,"submitted":283,"approved":145,"in_review":82,"removed":0,"accounts_live":374,"accounts_bought":77,"accounts_bought_cost":24400,"accounts_needed":72,"freelancer_cost":5050,"other_expenses_cost":7600,"total_cost":37050,"reg_rate":5.47,"ftd_rate":24.2,"salary_cost":10000.0},"Tom":{"clicks":160362,"unique_clicks":52974,"registrations":4203,"ftds":846,"live_apps":383,"submitted":73,"approved":31,"in_review":13,"removed":0,"accounts_live":2,"accounts_bought":3,"accounts_bought_cost":210,"accounts_needed":36,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":210,"reg_rate":2.62,"ftd_rate":20.13,"salary_cost":9400.0},"Yuval":{"clicks":260101,"unique_clicks":257909,"registrations":9773,"ftds":3006,"live_apps":0,"submitted":41,"approved":33,"in_review":9,"removed":45,"accounts_live":21,"accounts_bought":3,"accounts_bought_cost":1500,"accounts_needed":5,"freelancer_cost":0,"other_expenses_cost":275,"total_cost":1775,"reg_rate":3.76,"ftd_rate":30.76,"salary_cost":7933.33}},"per_platform":{"android":{"clicks":506161,"unique_clicks":306214,"registrations":19511,"ftds":5205,"live_apps":214,"submitted":374,"approved":198,"in_review":90,"removed":54,"accounts_live":222,"accounts_bought":51,"accounts_bought_cost":23950,"accounts_needed":55,"freelancer_cost":10250,"other_expenses_cost":8772,"total_cost":42972,"reg_rate":3.85,"ftd_rate":26.68},"huawei":{"clicks":25396,"unique_clicks":6000,"registrations":393,"ftds":127,"live_apps":191,"submitted":43,"approved":11,"in_review":12,"removed":0,"accounts_live":65,"accounts_bought":20,"accounts_bought_cost":1600,"accounts_needed":18,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":1600,"reg_rate":1.55,"ftd_rate":32.32},"ios":{"clicks":278760,"unique_clicks":50833,"registrations":545,"ftds":251,"live_apps":14,"submitted":26,"approved":11,"in_review":5,"removed":0,"accounts_live":8,"accounts_bought":14,"accounts_bought_cost":6300,"accounts_needed":12,"freelancer_cost":0,"other_expenses_cost":500,"total_cost":6800,"reg_rate":0.2,"ftd_rate":46.06},"samsung":{"clicks":35796,"unique_clicks":9066,"registrations":333,"ftds":135,"live_apps":163,"submitted":20,"approved":8,"in_review":3,"removed":0,"accounts_live":60,"accounts_bought":0,"accounts_bought_cost":0,"accounts_needed":10,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":0,"reg_rate":0.93,"ftd_rate":40.54},"vivo":{"clicks":3616,"unique_clicks":888,"registrations":6,"ftds":0,"live_apps":0,"submitted":2,"approved":0,"in_review":0,"removed":0,"accounts_live":0,"accounts_bought":0,"accounts_bought_cost":0,"accounts_needed":15,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":0,"reg_rate":0.17,"ftd_rate":0.0},"windows":{"clicks":60985,"unique_clicks":21426,"registrations":1108,"ftds":290,"live_apps":239,"submitted":74,"approved":43,"in_review":19,"removed":0,"accounts_live":66,"accounts_bought":17,"accounts_bought_cost":1290,"accounts_needed":13,"freelancer_cost":0,"other_expenses_cost":630,"total_cost":1920,"reg_rate":1.82,"ftd_rate":26.17},"xiaomi":{"clicks":24024,"unique_clicks":4505,"registrations":209,"ftds":72,"live_apps":79,"submitted":11,"approved":3,"in_review":3,"removed":0,"accounts_live":100,"accounts_bought":0,"accounts_bought_cost":0,"accounts_needed":0,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":0,"reg_rate":0.87,"ftd_rate":34.45}},"per_owner_platform":{"Alon":{"ios":{"clicks":273359,"unique_clicks":50197,"registrations":359,"ftds":194,"live_apps":0,"submitted":4,"approved":0,"in_review":0,"removed":0,"accounts_live":0,"accounts_bought":0,"accounts_bought_cost":0,"accounts_needed":0,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":0,"reg_rate":0.13,"ftd_rate":54.04}},"Damien":{"android":{"clicks":0,"unique_clicks":0,"registrations":0,"ftds":0,"live_apps":0,"submitted":1,"approved":0,"in_review":1,"removed":0,"accounts_live":0,"accounts_bought":1,"accounts_bought_cost":500,"accounts_needed":0,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":500,"reg_rate":null,"ftd_rate":null},"ios":{"clicks":0,"unique_clicks":0,"registrations":0,"ftds":0,"live_apps":4,"submitted":3,"approved":1,"in_review":2,"removed":0,"accounts_live":4,"accounts_bought":2,"accounts_bought_cost":600,"accounts_needed":0,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":600,"reg_rate":null,"ftd_rate":null},"windows":{"clicks":25219,"unique_clicks":10041,"registrations":322,"ftds":73,"live_apps":24,"submitted":14,"approved":7,"in_review":7,"removed":0,"accounts_live":21,"accounts_bought":4,"accounts_bought_cost":280,"accounts_needed":0,"freelancer_cost":0,"other_expenses_cost":580,"total_cost":860,"reg_rate":1.28,"ftd_rate":22.67}},"Ehod":{"android":{"clicks":87128,"unique_clicks":27676,"registrations":424,"ftds":261,"live_apps":56,"submitted":112,"approved":44,"in_review":15,"removed":7,"accounts_live":64,"accounts_bought":0,"accounts_bought_cost":0,"accounts_needed":0,"freelancer_cost":5200,"other_expenses_cost":947,"total_cost":6147,"reg_rate":0.49,"ftd_rate":61.56}},"Kristina":{"ios":{"clicks":4,"unique_clicks":0,"registrations":0,"ftds":0,"live_apps":7,"submitted":9,"approved":5,"in_review":3,"removed":0,"accounts_live":0,"accounts_bought":10,"accounts_bought_cost":4700,"accounts_needed":10,"freelancer_cost":0,"other_expenses_cost":500,"total_cost":5200,"reg_rate":0.0,"ftd_rate":null}},"Lera":{"android":{"clicks":205,"unique_clicks":135,"registrations":0,"ftds":0,"live_apps":6,"submitted":10,"approved":8,"in_review":0,"removed":2,"accounts_live":35,"accounts_bought":2,"accounts_bought_cost":950,"accounts_needed":0,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":950,"reg_rate":0.0,"ftd_rate":null}},"Rotem":{"android":{"clicks":109891,"unique_clicks":0,"registrations":6421,"ftds":1523,"live_apps":144,"submitted":203,"approved":107,"in_review":65,"removed":0,"accounts_live":102,"accounts_bought":45,"accounts_bought_cost":21000,"accounts_needed":45,"freelancer_cost":5050,"other_expenses_cost":7550,"total_cost":33600,"reg_rate":5.84,"ftd_rate":23.72},"huawei":{"clicks":10396,"unique_clicks":0,"registrations":219,"ftds":51,"live_apps":70,"submitted":30,"approved":8,"in_review":9,"removed":0,"accounts_live":65,"accounts_bought":20,"accounts_bought_cost":1600,"accounts_needed":15,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":1600,"reg_rate":2.11,"ftd_rate":23.29},"ios":{"clicks":597,"unique_clicks":0,"registrations":51,"ftds":26,"live_apps":2,"submitted":10,"approved":5,"in_review":0,"removed":0,"accounts_live":2,"accounts_bought":2,"accounts_bought_cost":1000,"accounts_needed":2,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":1000,"reg_rate":8.54,"ftd_rate":50.98},"samsung":{"clicks":2350,"unique_clicks":0,"registrations":91,"ftds":35,"live_apps":50,"submitted":0,"approved":0,"in_review":0,"removed":0,"accounts_live":60,"accounts_bought":0,"accounts_bought_cost":0,"accounts_needed":0,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":0,"reg_rate":3.87,"ftd_rate":38.46},"windows":{"clicks":966,"unique_clicks":0,"registrations":53,"ftds":3,"live_apps":94,"submitted":40,"approved":25,"in_review":8,"removed":0,"accounts_live":45,"accounts_bought":10,"accounts_bought_cost":800,"accounts_needed":10,"freelancer_cost":0,"other_expenses_cost":50,"total_cost":850,"reg_rate":5.49,"ftd_rate":5.66},"xiaomi":{"clicks":4160,"unique_clicks":0,"registrations":189,"ftds":62,"live_apps":60,"submitted":0,"approved":0,"in_review":0,"removed":0,"accounts_live":100,"accounts_bought":0,"accounts_bought_cost":0,"accounts_needed":0,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":0,"reg_rate":4.54,"ftd_rate":32.8}},"Tom":{"android":{"clicks":48836,"unique_clicks":20494,"registrations":2893,"ftds":415,"live_apps":8,"submitted":7,"approved":6,"in_review":0,"removed":0,"accounts_live":0,"accounts_bought":0,"accounts_bought_cost":0,"accounts_needed":5,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":0,"reg_rate":5.92,"ftd_rate":14.34},"huawei":{"clicks":15000,"unique_clicks":6000,"registrations":174,"ftds":76,"live_apps":121,"submitted":13,"approved":3,"in_review":3,"removed":0,"accounts_live":0,"accounts_bought":0,"accounts_bought_cost":0,"accounts_needed":3,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":0,"reg_rate":1.16,"ftd_rate":43.68},"ios":{"clicks":4800,"unique_clicks":636,"registrations":135,"ftds":31,"live_apps":1,"submitted":0,"approved":0,"in_review":0,"removed":0,"accounts_live":2,"accounts_bought":0,"accounts_bought_cost":0,"accounts_needed":0,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":0,"reg_rate":2.81,"ftd_rate":22.96},"samsung":{"clicks":33446,"unique_clicks":9066,"registrations":242,"ftds":100,"live_apps":113,"submitted":20,"approved":8,"in_review":3,"removed":0,"accounts_live":0,"accounts_bought":0,"accounts_bought_cost":0,"accounts_needed":10,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":0,"reg_rate":0.72,"ftd_rate":41.32},"vivo":{"clicks":3616,"unique_clicks":888,"registrations":6,"ftds":0,"live_apps":0,"submitted":2,"approved":0,"in_review":0,"removed":0,"accounts_live":0,"accounts_bought":0,"accounts_bought_cost":0,"accounts_needed":15,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":0,"reg_rate":0.17,"ftd_rate":0.0},"windows":{"clicks":34800,"unique_clicks":11385,"registrations":733,"ftds":214,"live_apps":121,"submitted":20,"approved":11,"in_review":4,"removed":0,"accounts_live":0,"accounts_bought":3,"accounts_bought_cost":210,"accounts_needed":3,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":210,"reg_rate":2.11,"ftd_rate":29.2},"xiaomi":{"clicks":19864,"unique_clicks":4505,"registrations":20,"ftds":10,"live_apps":19,"submitted":11,"approved":3,"in_review":3,"removed":0,"accounts_live":0,"accounts_bought":0,"accounts_bought_cost":0,"accounts_needed":0,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":0,"reg_rate":0.1,"ftd_rate":50.0}},"Yuval":{"android":{"clicks":260101,"unique_clicks":257909,"registrations":9773,"ftds":3006,"live_apps":0,"submitted":41,"approved":33,"in_review":9,"removed":45,"accounts_live":21,"accounts_bought":3,"accounts_bought_cost":1500,"accounts_needed":5,"freelancer_cost":0,"other_expenses_cost":275,"total_cost":1775,"reg_rate":3.76,"ftd_rate":30.76}}},"per_platform_owner":{"android":{"Damien":{"clicks":0,"unique_clicks":0,"registrations":0,"ftds":0,"live_apps":0,"submitted":1,"approved":0,"in_review":1,"removed":0,"accounts_live":0,"accounts_bought":1,"accounts_bought_cost":500,"accounts_needed":0,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":500,"reg_rate":null,"ftd_rate":null},"Ehod":{"clicks":87128,"unique_clicks":27676,"registrations":424,"ftds":261,"live_apps":56,"submitted":112,"approved":44,"in_review":15,"removed":7,"accounts_live":64,"accounts_bought":0,"accounts_bought_cost":0,"accounts_needed":0,"freelancer_cost":5200,"other_expenses_cost":947,"total_cost":6147,"reg_rate":0.49,"ftd_rate":61.56},"Lera":{"clicks":205,"unique_clicks":135,"registrations":0,"ftds":0,"live_apps":6,"submitted":10,"approved":8,"in_review":0,"removed":2,"accounts_live":35,"accounts_bought":2,"accounts_bought_cost":950,"accounts_needed":0,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":950,"reg_rate":0.0,"ftd_rate":null},"Rotem":{"clicks":109891,"unique_clicks":0,"registrations":6421,"ftds":1523,"live_apps":144,"submitted":203,"approved":107,"in_review":65,"removed":0,"accounts_live":102,"accounts_bought":45,"accounts_bought_cost":21000,"accounts_needed":45,"freelancer_cost":5050,"other_expenses_cost":7550,"total_cost":33600,"reg_rate":5.84,"ftd_rate":23.72},"Tom":{"clicks":48836,"unique_clicks":20494,"registrations":2893,"ftds":415,"live_apps":8,"submitted":7,"approved":6,"in_review":0,"removed":0,"accounts_live":0,"accounts_bought":0,"accounts_bought_cost":0,"accounts_needed":5,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":0,"reg_rate":5.92,"ftd_rate":14.34},"Yuval":{"clicks":260101,"unique_clicks":257909,"registrations":9773,"ftds":3006,"live_apps":0,"submitted":41,"approved":33,"in_review":9,"removed":45,"accounts_live":21,"accounts_bought":3,"accounts_bought_cost":1500,"accounts_needed":5,"freelancer_cost":0,"other_expenses_cost":275,"total_cost":1775,"reg_rate":3.76,"ftd_rate":30.76}},"huawei":{"Rotem":{"clicks":10396,"unique_clicks":0,"registrations":219,"ftds":51,"live_apps":70,"submitted":30,"approved":8,"in_review":9,"removed":0,"accounts_live":65,"accounts_bought":20,"accounts_bought_cost":1600,"accounts_needed":15,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":1600,"reg_rate":2.11,"ftd_rate":23.29},"Tom":{"clicks":15000,"unique_clicks":6000,"registrations":174,"ftds":76,"live_apps":121,"submitted":13,"approved":3,"in_review":3,"removed":0,"accounts_live":0,"accounts_bought":0,"accounts_bought_cost":0,"accounts_needed":3,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":0,"reg_rate":1.16,"ftd_rate":43.68}},"ios":{"Alon":{"clicks":273359,"unique_clicks":50197,"registrations":359,"ftds":194,"live_apps":0,"submitted":4,"approved":0,"in_review":0,"removed":0,"accounts_live":0,"accounts_bought":0,"accounts_bought_cost":0,"accounts_needed":0,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":0,"reg_rate":0.13,"ftd_rate":54.04},"Damien":{"clicks":0,"unique_clicks":0,"registrations":0,"ftds":0,"live_apps":4,"submitted":3,"approved":1,"in_review":2,"removed":0,"accounts_live":4,"accounts_bought":2,"accounts_bought_cost":600,"accounts_needed":0,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":600,"reg_rate":null,"ftd_rate":null},"Kristina":{"clicks":4,"unique_clicks":0,"registrations":0,"ftds":0,"live_apps":7,"submitted":9,"approved":5,"in_review":3,"removed":0,"accounts_live":0,"accounts_bought":10,"accounts_bought_cost":4700,"accounts_needed":10,"freelancer_cost":0,"other_expenses_cost":500,"total_cost":5200,"reg_rate":0.0,"ftd_rate":null},"Rotem":{"clicks":597,"unique_clicks":0,"registrations":51,"ftds":26,"live_apps":2,"submitted":10,"approved":5,"in_review":0,"removed":0,"accounts_live":2,"accounts_bought":2,"accounts_bought_cost":1000,"accounts_needed":2,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":1000,"reg_rate":8.54,"ftd_rate":50.98},"Tom":{"clicks":4800,"unique_clicks":636,"registrations":135,"ftds":31,"live_apps":1,"submitted":0,"approved":0,"in_review":0,"removed":0,"accounts_live":2,"accounts_bought":0,"accounts_bought_cost":0,"accounts_needed":0,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":0,"reg_rate":2.81,"ftd_rate":22.96}},"samsung":{"Rotem":{"clicks":2350,"unique_clicks":0,"registrations":91,"ftds":35,"live_apps":50,"submitted":0,"approved":0,"in_review":0,"removed":0,"accounts_live":60,"accounts_bought":0,"accounts_bought_cost":0,"accounts_needed":0,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":0,"reg_rate":3.87,"ftd_rate":38.46},"Tom":{"clicks":33446,"unique_clicks":9066,"registrations":242,"ftds":100,"live_apps":113,"submitted":20,"approved":8,"in_review":3,"removed":0,"accounts_live":0,"accounts_bought":0,"accounts_bought_cost":0,"accounts_needed":10,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":0,"reg_rate":0.72,"ftd_rate":41.32}},"vivo":{"Tom":{"clicks":3616,"unique_clicks":888,"registrations":6,"ftds":0,"live_apps":0,"submitted":2,"approved":0,"in_review":0,"removed":0,"accounts_live":0,"accounts_bought":0,"accounts_bought_cost":0,"accounts_needed":15,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":0,"reg_rate":0.17,"ftd_rate":0.0}},"windows":{"Damien":{"clicks":25219,"unique_clicks":10041,"registrations":322,"ftds":73,"live_apps":24,"submitted":14,"approved":7,"in_review":7,"removed":0,"accounts_live":21,"accounts_bought":4,"accounts_bought_cost":280,"accounts_needed":0,"freelancer_cost":0,"other_expenses_cost":580,"total_cost":860,"reg_rate":1.28,"ftd_rate":22.67},"Rotem":{"clicks":966,"unique_clicks":0,"registrations":53,"ftds":3,"live_apps":94,"submitted":40,"approved":25,"in_review":8,"removed":0,"accounts_live":45,"accounts_bought":10,"accounts_bought_cost":800,"accounts_needed":10,"freelancer_cost":0,"other_expenses_cost":50,"total_cost":850,"reg_rate":5.49,"ftd_rate":5.66},"Tom":{"clicks":34800,"unique_clicks":11385,"registrations":733,"ftds":214,"live_apps":121,"submitted":20,"approved":11,"in_review":4,"removed":0,"accounts_live":0,"accounts_bought":3,"accounts_bought_cost":210,"accounts_needed":3,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":210,"reg_rate":2.11,"ftd_rate":29.2}},"xiaomi":{"Rotem":{"clicks":4160,"unique_clicks":0,"registrations":189,"ftds":62,"live_apps":60,"submitted":0,"approved":0,"in_review":0,"removed":0,"accounts_live":100,"accounts_bought":0,"accounts_bought_cost":0,"accounts_needed":0,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":0,"reg_rate":4.54,"ftd_rate":32.8},"Tom":{"clicks":19864,"unique_clicks":4505,"registrations":20,"ftds":10,"live_apps":19,"submitted":11,"approved":3,"in_review":3,"removed":0,"accounts_live":0,"accounts_bought":0,"accounts_bought_cost":0,"accounts_needed":0,"freelancer_cost":0,"other_expenses_cost":0,"total_cost":0,"reg_rate":0.1,"ftd_rate":50.0}}},"per_owner_freelancers":{"Alon":[],"Damien":[],"Ehod":[["Samira - Project Manager",2000],["Nitish - Project Manager",1200],["Kanchan - Developer",1000],["Mak - Designer",1000]],"Kristina":[],"Lera":[],"Rotem":[["PH operators",3250],["developer+ a.i tools",1100],["BD operators",700]],"Tom":[],"Yuval":[]},"per_owner_expenses":{"Alon":[],"Damien":[["Namecheap (USD)",206],["Proxies (USD)",160],["Claude Plan (USD)",100],["ASO World (USD)",43],["Claude API (USD)",27],["Openrouter",20],["Windsurf / Devin (USD)",15],["Netlify (USD)",9]],"Ehod":[["ASOWorld (USD)",477],["Multilogin (USD)",250],["Bolt (USD)",100],["Claude",100],["Gemini (USD)",20]],"Kristina":[["Virtual credit cards",500]],"Lera":[],"Rotem":[["ASO WORLD",5000],["KEYAPP",2000],["DOLPHIN",200],["ESIM",200],["OCTTO BROWSER",100],["CANVA-GPT",50],["dolphin",50]],"Tom":[],"Yuval":[["Cursor",200],["Expo",75]]},"per_platform_freelancers":{"android":[["Rotem - PH operators",3250],["Ehod - Samira - Project Manager",2000],["Ehod - Nitish - Project Manager",1200],["Rotem - developer+ a.i tools",1100],["Ehod - Kanchan - Developer",1000],["Ehod - Mak - Designer",1000],["Rotem - BD operators",700]],"huawei":[],"ios":[],"samsung":[],"vivo":[],"windows":[],"xiaomi":[]},"per_platform_expenses":{"android":[["Rotem - ASO WORLD",5000],["Rotem - KEYAPP",2000],["Ehod - ASOWorld (USD)",477],["Ehod - Multilogin (USD)",250],["Rotem - DOLPHIN",200],["Rotem - ESIM",200],["Yuval - Cursor",200],["Ehod - Bolt (USD)",100],["Ehod - Claude",100],["Rotem - OCTTO BROWSER",100],["Yuval - Expo",75],["Rotem - CANVA-GPT",50],["Ehod - Gemini (USD)",20]],"huawei":[],"ios":[["Kristina - Virtual credit cards",500]],"samsung":[],"vivo":[],"windows":[["Damien - Namecheap (USD)",206],["Damien - Proxies (USD)",160],["Damien - Claude Plan (USD)",100],["Rotem - dolphin",50],["Damien - ASO World (USD)",43],["Damien - Claude API (USD)",27],["Damien - Openrouter",20],["Damien - Windsurf / Devin (USD)",15],["Damien - Netlify (USD)",9]],"xiaomi":[]},"totals":{"clicks":934738,"unique_clicks":398932,"registrations":22105,"ftds":6080,"live_apps":900,"submitted":550,"approved":274,"in_review":132,"removed":54,"accounts_live":521,"accounts_bought":102,"accounts_bought_cost":33140,"accounts_needed":123,"freelancer_cost":10250,"other_expenses_cost":9902,"total_cost":53292,"reg_rate":2.36,"ftd_rate":27.51,"salary_cost":61966.66},"top_freelancers":[["Rotem - PH operators",3250],["Ehod - Samira - Project Manager",2000],["Ehod - Nitish - Project Manager",1200],["Rotem - developer+ a.i tools",1100],["Ehod - Kanchan - Developer",1000],["Ehod - Mak - Designer",1000],["Rotem - BD operators",700]],"top_expenses":[["ASO WORLD",5000.0],["KEYAPP",2000.0],["Virtual credit cards",500.0],["ASOWorld (USD)",477.0],["Multilogin (USD)",250.0],["Namecheap (USD)",206.0],["DOLPHIN",200.0],["ESIM",200.0],["Cursor",200.0],["Proxies (USD)",160.0],["Claude Plan (USD)",100.0],["Bolt (USD)",100.0],["Claude",100.0],["OCTTO BROWSER",100.0],["Expo",75.0]],"profit":{"Alon":{"has_income":true,"income_ftd":184,"income_ils":30354.0,"income_usd":10118.0,"ops_cost":0,"has_salary":true,"salary_nis":25500,"salary_usd":8500.0,"total_cost":8500.0,"profit_usd":1618.0,"margin_pct":15.99},"Damien":{"has_income":true,"income_ftd":101,"income_ils":5716.0,"income_usd":1905.0,"ops_cost":1960,"has_salary":true,"salary_nis":11100,"salary_usd":3700.0,"total_cost":5660.0,"profit_usd":-3755.0,"margin_pct":-197.11},"Ehod":{"has_income":true,"income_ftd":264,"income_ils":53284.0,"income_usd":17761.0,"ops_cost":6147,"has_salary":true,"salary_nis":34200,"salary_usd":11400.0,"total_cost":17547.0,"profit_usd":214.0,"margin_pct":1.2},"Kristina":{"has_income":false,"income_ftd":null,"income_ils":null,"income_usd":null,"ops_cost":5200,"has_salary":true,"salary_nis":33100,"salary_usd":11033.33,"total_cost":16233.33,"profit_usd":null,"margin_pct":null},"Lera":{"has_income":false,"income_ftd":null,"income_ils":null,"income_usd":null,"ops_cost":950,"has_salary":false,"salary_nis":null,"salary_usd":0,"total_cost":950,"profit_usd":null,"margin_pct":null},"Rotem":{"has_income":true,"income_ftd":1706,"income_ils":82754.0,"income_usd":27585.0,"ops_cost":37050,"has_salary":true,"salary_nis":30000,"salary_usd":10000.0,"total_cost":47050.0,"profit_usd":-19465.0,"margin_pct":-70.56},"Tom":{"has_income":true,"income_ftd":494,"income_ils":43885.0,"income_usd":14628.0,"ops_cost":210,"has_salary":true,"salary_nis":28200,"salary_usd":9400.0,"total_cost":9610.0,"profit_usd":5018.0,"margin_pct":34.3},"Yuval":{"has_income":true,"income_ftd":3005,"income_ils":358277.0,"income_usd":119426.0,"ops_cost":1775,"has_salary":true,"salary_nis":23800,"salary_usd":7933.33,"total_cost":9708.33,"profit_usd":109717.67,"margin_pct":91.87}},"profit_unmatched":{"Dolev":{"income_ftd":36,"income_ils":3354.0,"income_usd":1118.0,"salary_nis":10000,"salary_usd":3333.33,"partial_profit_usd":-2215.33},"Yishai":{"income_ftd":223,"income_ils":23099.0,"income_usd":7700.0},"Linda":{"income_ftd":1,"income_ils":500.0,"income_usd":167.0}},"profit_totals":{"matched_owners":["Alon","Damien","Ehod","Rotem","Tom","Yuval"],"total_income_usd_matched":191423.0,"total_ops_cost_usd_matched":47142,"total_salary_usd_matched":50933.33,"total_cost_usd_matched":98075.33,"total_profit_usd_matched":93347.67,"exchange_rate":3.0}};
+
+const OWNER_COLORS = ['s1','s2','s3','s4','s5','s6','s7','s1'];
+const PLATFORM_LABELS = { android:'Android', ios:'iOS', windows:'Windows', samsung:'Samsung', huawei:'Huawei', xiaomi:'Xiaomi', vivo:'Vivo' };
+const PLATFORM_ORDER = ['android','ios','windows','samsung','huawei','xiaomi','vivo'];
+
+let filterMode = null;   // null | {type:'owner', value} | {type:'platform', value}
+let sortKey = 'ftds';
+let sortDir = 'desc';
+let profitSortKey = 'profit_usd';
+let profitSortDir = 'desc';
+
+function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+function fmt(n){ return Math.round(n).toLocaleString('en-US'); }
+function fmtMoney(n){ return '$' + Math.round(n).toLocaleString('en-US'); }
+function fmtNis(n){ return Math.round(n).toLocaleString('en-US') + ' ₪'; }
+function ownerColor(name){ return OWNER_COLORS[DATA.owners.indexOf(name)] || 's1'; }
+function platformColor(p){ return `s${PLATFORM_ORDER.indexOf(p)+1}`; }
+function platformLabel(p){ return PLATFORM_LABELS[p] || p; }
+
+function tip(el, container){
+  let t = container.querySelector('.bar-tooltip');
+  if(!t){ t = document.createElement('div'); t.className='bar-tooltip'; container.appendChild(t); }
+  return t;
+}
+function showTip(container, target, html, evt){
+  const t = tip(target, container);
+  t.innerHTML = html;
+  const rect = container.getBoundingClientRect();
+  t.style.left = (evt.clientX - rect.left) + 'px';
+  t.style.top = (evt.clientY - rect.top) + 'px';
+  t.style.opacity = 1;
+}
+function hideTip(container){ const t = container.querySelector('.bar-tooltip'); if(t) t.style.opacity = 0; }
+
+/* ---------- Filter state: hash + pills + banner ---------- */
+function readHashFilter(){
+  let m = location.hash.match(/owner=([^&]+)/);
+  if(m){ const name = decodeURIComponent(m[1]); if(DATA.owners.includes(name)) return {type:'owner', value:name}; }
+  m = location.hash.match(/platform=([^&]+)/);
+  if(m){ const p = decodeURIComponent(m[1]); if(DATA.platforms.includes(p)) return {type:'platform', value:p}; }
+  return null;
+}
+function setFilter(type, value){
+  filterMode = type ? { type, value } : null;
+  history.replaceState(null, '', filterMode ? (`#${type}=${encodeURIComponent(value)}`) : '#');
+  renderAll();
+  document.querySelector('.wrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function scopeMetrics(){
+  if(!filterMode) return DATA.totals;
+  if(filterMode.type === 'owner') return DATA.per_owner[filterMode.value];
+  return DATA.per_platform[filterMode.value];
+}
+function scopeLabel(){
+  if(!filterMode) return null;
+  return filterMode.type === 'owner' ? filterMode.value : platformLabel(filterMode.value);
+}
+
+/* rows for the "opposite dimension" of the current filter: owners when unfiltered
+   or platform-filtered, platforms when owner-filtered. Used by the grouped-bar
+   chart, the cost chart and the detail table. */
+function computeChildRows(){
+  if(!filterMode){
+    return DATA.owners.map(o => ({ label:o, m:DATA.per_owner[o], linkType:'owner', linkValue:o, color:ownerColor(o) }));
+  }
+  if(filterMode.type === 'owner'){
+    const byP = DATA.per_owner_platform[filterMode.value] || {};
+    return DATA.platforms.filter(p => byP[p]).map(p => ({ label:platformLabel(p), m:byP[p], linkType:'platform', linkValue:p, color:platformColor(p) }));
+  }
+  const byO = DATA.per_platform_owner[filterMode.value] || {};
+  return DATA.owners.filter(o => byO[o]).map(o => ({ label:o, m:byO[o], linkType:'owner', linkValue:o, color:ownerColor(o) }));
+}
+
+function renderFilterBar(){
+  const ownersOrdered = [...DATA.owners].sort((a,b) => DATA.per_owner[b].ftds - DATA.per_owner[a].ftds);
+  const platformsOrdered = [...DATA.platforms].sort((a,b) => DATA.per_platform[b].live_apps - DATA.per_platform[a].live_apps);
+  const isOwner = (o) => filterMode && filterMode.type==='owner' && filterMode.value===o;
+  const isPlat = (p) => filterMode && filterMode.type==='platform' && filterMode.value===p;
+
+  const el = document.getElementById('filterbar');
+  el.innerHTML = `
+    <div class="filter-group">
+      <span class="filter-group-label">איש צוות:</span>
+      <div class="pill ${!filterMode?'active':''}" data-filter-link="__all__">כל הצוות</div>
+      ${ownersOrdered.map(o => `<div class="pill ${isOwner(o)?'active':''}" data-owner-link="${o}"><span class="dot" style="background:${isOwner(o)?'#fff':`var(--${ownerColor(o)})`}"></span><span class="en">${o}</span></div>`).join('')}
+    </div>
+    <div class="filter-group">
+      <span class="filter-group-label">פלטפורמה:</span>
+      <div class="pill ${!filterMode?'active':''}" data-filter-link="__all__">הכל</div>
+      ${platformsOrdered.map(p => `<div class="pill ${isPlat(p)?'active':''}" data-platform-link="${p}"><span class="dot" style="background:${isPlat(p)?'#fff':`var(--${platformColor(p)})`}"></span>${platformLabel(p)}</div>`).join('')}
+    </div>`;
+}
+
+function renderFilterBanner(){
+  const el = document.getElementById('filterBanner');
+  if(filterMode){
+    el.hidden = false;
+    const dimLabel = filterMode.type === 'owner' ? 'איש צוות' : 'פלטפורמה';
+    el.innerHTML = `<span>מוצגים הנתונים של ${dimLabel} <b class="en">${scopeLabel()}</b> בלבד</span><button data-filter-link="__all__">← חזרה לכל הנתונים</button>`;
+  } else {
+    el.hidden = true;
+    el.innerHTML = '';
+  }
+}
+
+/* ---------- Stat tiles ---------- */
+function renderTiles(){
+  const t = scopeMetrics();
+  document.getElementById('tilesTitle').textContent = filterMode ? `מבט על — ${scopeLabel()}` : 'מבט על';
+  const tiles = [
+    { label: 'סה״כ לחיצות', value: fmt(t.clicks) },
+    { label: 'הרשמות', value: fmt(t.registrations), delta: t.reg_rate!=null ? `שיעור המרה <b>${t.reg_rate}%</b>` : '' },
+    { label: 'הפקדות ראשונות (FTD)', value: fmt(t.ftds), delta: t.ftd_rate!=null ? `<b>${t.ftd_rate}%</b> מההרשמות` : '' },
+    { label: 'אפליקציות פעילות', value: fmt(t.live_apps), delta: `${fmt(t.submitted)} הוגשו החודש` },
+    { label: 'חשבונות פעילים', value: fmt(t.accounts_live), delta: `${fmt(t.accounts_bought)} נרכשו (${fmtMoney(t.accounts_bought_cost)})` },
+    { label: 'עלות תפעולית כוללת', value: fmtMoney(t.total_cost), delta: `פרילנסרים + הוצאות + חשבונות` },
+  ];
+  const wrap = document.getElementById('tiles');
+  wrap.innerHTML = tiles.map(x => `
+    <div class="tile">
+      <div class="label">${x.label}</div>
+      <div class="value">${x.value}</div>
+      ${x.delta ? `<div class="delta">${x.delta}</div>` : ''}
+    </div>`).join('');
+}
+
+/* ---------- Funnel ---------- */
+function renderFunnel(){
+  const t = scopeMetrics();
+  document.getElementById('funnelSub').textContent = filterMode
+    ? `לחיצות → הרשמות → הפקדות ראשונות (FTD), ${scopeLabel()}`
+    : 'לחיצות → הרשמות → הפקדות ראשונות (FTD), סה״כ צוות';
+  const el = document.getElementById('funnel');
+  if(t.clicks === 0){
+    el.innerHTML = `<p class="muted-cell" style="margin:0;padding:8px 0">אין נתוני לחיצות להצגה.</p>`;
+    return;
+  }
+  const stages = [
+    { label: 'לחיצות', value: t.clicks, color: 's1' },
+    { label: 'הרשמות', value: t.registrations, color: 's2', conv: t.reg_rate },
+    { label: 'הפקדות ראשונות', value: t.ftds, color: 's7', conv: t.ftd_rate },
+  ];
+  const max = Math.sqrt(stages[0].value) || 1;
+  el.innerHTML = stages.map((s,i) => {
+    const pct = Math.max(4, (Math.sqrt(s.value)/max)*100);
+    return `
+    <div class="funnel-row">
+      <div class="funnel-label">${s.label}</div>
+      <div class="funnel-track">
+        <div class="funnel-fill" style="width:${pct}%; background:var(--${s.color})">
+          <span class="funnel-value" style="color:#fff">${fmt(s.value)}</span>
+        </div>
+      </div>
+      <div class="funnel-conv">${i===0 ? '&nbsp;' : (s.conv!=null ? `מהשלב הקודם <b>${s.conv}%</b>` : '&nbsp;')}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ---------- Grouped bar chart: registrations / ftds, by the "child" dimension ---------- */
+function renderOwnerBars(){
+  const rows = computeChildRows()
+    .filter(r => r.m.clicks > 0 || r.m.registrations > 0)
+    .sort((a,b) => b.m.ftds - a.m.ftds);
+
+  if(!filterMode){
+    document.getElementById('barsTitle').textContent = 'הרשמות והפקדות לפי איש צוות';
+    document.getElementById('barsSub').textContent = 'ממוין לפי הפקדות ראשונות (FTD) · לחצו על שם כדי לסנן';
+  } else if(filterMode.type === 'owner'){
+    document.getElementById('barsTitle').textContent = 'הרשמות והפקדות לפי פלטפורמה';
+    document.getElementById('barsSub').textContent = `איש צוות: ${scopeLabel()} · לחצו על פלטפורמה כדי לסנן`;
+  } else {
+    document.getElementById('barsTitle').textContent = 'הרשמות והפקדות לפי איש צוות';
+    document.getElementById('barsSub').textContent = `פלטפורמה: ${scopeLabel()} · לחצו על שם כדי לסנן`;
+  }
+
+  const wrap = document.getElementById('ownerBars');
+  if(!rows.length){ wrap.innerHTML = `<p class="muted-cell" style="margin:0;padding:8px 0">אין נתונים להצגה.</p>`; return; }
+
+  const W = 640, rowH = 34, leftPad = 78, rightPad = 54, topPad = 6;
+  const H = rows.length * rowH + topPad*2;
+  const maxVal = Math.max(...rows.map(r => Math.max(r.m.registrations, r.m.ftds)), 1);
+  const barH = 11;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img">`;
+  rows.forEach((r, i) => {
+    const cy = topPad + i*rowH;
+    const regW = (r.m.registrations/maxVal) * (W-leftPad-rightPad);
+    const ftdW = (r.m.ftds/maxVal) * (W-leftPad-rightPad);
+    svg += `<text x="${W-8}" y="${cy+rowH/2+4}" text-anchor="end" font-size="12.5" font-weight="600" fill="${css('--ink')}" class="owner-link" data-${r.linkType}-link="${r.linkValue}">${r.label}</text>`;
+    svg += `<g class="hover-row" data-i="${i}">`;
+    svg += `<rect x="0" y="${cy+2}" width="${regW}" height="${barH}" rx="3" fill="${css('--s1')}"></rect>`;
+    svg += `<rect x="0" y="${cy+2+barH+3}" width="${ftdW}" height="${barH}" rx="3" fill="${css('--s2')}"></rect>`;
+    svg += `</g>`;
+  });
+  svg += `</svg>`;
+  wrap.innerHTML = svg;
+
+  wrap.querySelectorAll('.hover-row').forEach((g, i) => {
+    const r = rows[i];
+    g.addEventListener('mousemove', (e) => showTip(wrap, g, `<b class="en">${r.label}</b><br>הרשמות: <span class="en">${fmt(r.m.registrations)}</span> · FTD: <span class="en">${fmt(r.m.ftds)}</span>`, e));
+    g.addEventListener('mouseleave', () => hideTip(wrap));
+  });
+}
+
+/* ---------- Donut: live apps ---------- */
+function computeDonutRows(){
+  if(filterMode && filterMode.type === 'platform'){
+    const byO = DATA.per_platform_owner[filterMode.value] || {};
+    return DATA.owners.filter(o => byO[o]).map(o => ({ label:o, v: byO[o].live_apps, color: ownerColor(o), linkType:'owner', linkValue:o }));
+  }
+  if(filterMode && filterMode.type === 'owner'){
+    const byP = DATA.per_owner_platform[filterMode.value] || {};
+    return DATA.platforms.map(p => ({ label:platformLabel(p), v: byP[p] ? byP[p].live_apps : 0, color: platformColor(p), linkType:'platform', linkValue:p }));
+  }
+  return DATA.platforms.map(p => ({ label:platformLabel(p), v: DATA.per_platform[p].live_apps, color: platformColor(p), linkType:'platform', linkValue:p }));
+}
+
+function renderDonut(){
+  const data = computeDonutRows();
+  const byOwner = filterMode && filterMode.type === 'platform';
+  document.getElementById('donutTitle').textContent = byOwner ? 'אפליקציות פעילות לפי איש צוות' : 'אפליקציות פעילות לפי פלטפורמה';
+  const total = data.reduce((a,b) => a+b.v, 0);
+  document.getElementById('donutSub').innerHTML = filterMode
+    ? `${filterMode.type==='owner'?'איש צוות':'פלטפורמה'}: <span class="en">${scopeLabel()}</span>`
+    : `סה״כ <span class="en">${fmt(total)}</span> אפליקציות חיות`;
+
+  const size = 220, cx = size/2, cy = size/2, r = 78, sw = 26;
+  const circ = 2 * Math.PI * r;
+  let offset = 0;
+  let svg = `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" style="display:block;margin:0 auto">`;
+  svg += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${css('--grid')}" stroke-width="${sw}"></circle>`;
+  data.forEach((d, i) => {
+    if(d.v <= 0) return;
+    const frac = d.v/total;
+    const len = frac*circ - 2;
+    svg += `<circle class="donut-seg" data-i="${i}" cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${css('--'+d.color)}" stroke-width="${sw}"
+      stroke-dasharray="${len} ${circ-len}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${cx} ${cy})" stroke-linecap="butt"></circle>`;
+    offset += frac*circ;
+  });
+  svg += `<text x="${cx}" y="${cy-4}" text-anchor="middle" font-family="Rubik" font-size="26" font-weight="700" fill="${css('--ink')}" class="en">${fmt(total)}</text>`;
+  svg += `<text x="${cx}" y="${cy+16}" text-anchor="middle" font-size="11" fill="${css('--muted')}">אפליקציות פעילות</text>`;
+  svg += `</svg>`;
+
+  const legend = `<div class="legend" style="justify-content:center;margin-top:16px">` + data.map(d => `
+    <div class="legend-item owner-link" data-${d.linkType}-link="${d.linkValue}"><span class="swatch" style="background:var(--${d.color})"></span>${d.label} · <span class="en">${fmt(d.v)}</span></div>
+  `).join('') + `</div>`;
+
+  const wrap = document.getElementById('donut');
+  wrap.innerHTML = svg + legend;
+
+  wrap.querySelectorAll('.donut-seg').forEach((seg, i) => {
+    const d = data[i];
+    seg.addEventListener('mousemove', (e) => showTip(wrap, seg, `<b>${d.label}</b>: <span class="en">${fmt(d.v)}</span> אפליקציות (${total>0 ? (100*d.v/total).toFixed(1) : '0'}%)`, e));
+    seg.addEventListener('mouseleave', () => hideTip(wrap));
+  });
+}
+
+/* ---------- Cost stacked bars, by the "child" dimension ---------- */
+function renderCostBars(){
+  // salary is an owner-level figure (not attributable to a platform), so it only
+  // makes sense to show it in the true global, unfiltered owner view
+  const includeSalary = !filterMode;
+  const barTotal = (m) => m.total_cost + (includeSalary ? (m.salary_cost||0) : 0);
+
+  const rows = computeChildRows().filter(r => barTotal(r.m) > 0).sort((a,b) => barTotal(b.m) - barTotal(a.m));
+  const titleEl = document.getElementById('costTitle');
+  document.getElementById('salaryLegendItem').hidden = !includeSalary;
+  if(!filterMode){
+    titleEl.innerHTML = 'פילוח עלויות לפי איש צוות <span class="sub">חשבונות שנרכשו · פרילנסרים · הוצאות נוספות · משכורות (USD) · לחצו על שם לסינון</span>';
+  } else if(filterMode.type === 'owner'){
+    titleEl.innerHTML = `פילוח עלויות לפי פלטפורמה <span class="sub">איש צוות: <b class="en">${scopeLabel()}</b> · לא כולל משכורת (אינה מתחלקת לפי פלטפורמה)</span>`;
+  } else {
+    titleEl.innerHTML = `פילוח עלויות לפי איש צוות <span class="sub">פלטפורמה: <b class="en">${scopeLabel()}</b> · לא כולל משכורת (אינה מתחלקת לפי פלטפורמה)</span>`;
+  }
+
+  const wrap = document.getElementById('costBars');
+  if(!rows.length){ wrap.innerHTML = `<p class="muted-cell" style="margin:0;padding:8px 0">אין נתוני עלויות להצגה.</p>`; return; }
+
+  const W = 900, rowH = 38, leftLabel = 70, rightVal = 70, topPad = 6;
+  const H = rows.length*rowH + topPad*2;
+  const maxVal = Math.max(...rows.map(r => barTotal(r.m)), 1);
+  const trackW = W - leftLabel - rightVal;
+  const barH = 18;
+  const segDefs = [
+    { key:'accounts_bought_cost', color:'s1', label:'חשבונות שנרכשו' },
+    { key:'freelancer_cost', color:'s2', label:'פרילנסרים' },
+    { key:'other_expenses_cost', color:'s3', label:'הוצאות נוספות' },
+  ];
+  if(includeSalary) segDefs.push({ key:'salary_cost', color:'s4', label:'משכורות' });
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">`;
+  rows.forEach((r,i) => {
+    const y = topPad + i*rowH + (rowH-barH)/2;
+    let x = leftLabel;
+    svg += `<text x="${leftLabel-10}" y="${y+barH/2+4}" text-anchor="end" font-size="12.5" font-weight="600" fill="${css('--ink')}" class="owner-link" data-${r.linkType}-link="${r.linkValue}">${r.label}</text>`;
+    segDefs.forEach(s => {
+      const v = r.m[s.key];
+      if(v == null || v <= 0) return;
+      const w = Math.max(0,(v/maxVal)*trackW - 2);
+      svg += `<rect class="cost-seg" data-i="${i}" data-seg="${s.key}" x="${x}" y="${y}" width="${w}" height="${barH}" rx="3" fill="${css('--'+s.color)}"></rect>`;
+      x += (v/maxVal)*trackW;
+    });
+    svg += `<text x="${leftLabel + trackW + 14}" y="${y+barH/2+4}" text-anchor="start" font-size="12.5" font-weight="600" fill="${css('--ink-2')}" class="en">$${fmt(barTotal(r.m))}</text>`;
+  });
+  svg += `</svg>`;
+  wrap.innerHTML = svg;
+
+  wrap.querySelectorAll('.cost-seg').forEach(seg => {
+    const r = rows[+seg.dataset.i];
+    const def = segDefs.find(s => s.key === seg.dataset.seg);
+    seg.addEventListener('mousemove', (e) => showTip(wrap, seg, `<b class="en">${r.label}</b> · ${def.label}<br><span class="en">$${fmt(r.m[def.key])}</span>`, e));
+    seg.addEventListener('mouseleave', () => hideTip(wrap));
+  });
+}
+
+/* ---------- Mini tables: top freelancers / expenses (with totals) ---------- */
+function renderMiniTable(id, rows, unitLabel, total){
+  const el = document.getElementById(id);
+  if(!rows || !rows.length){
+    el.innerHTML = `<thead><tr><th>שם</th><th class="num">${unitLabel}</th></tr></thead><tbody><tr><td colspan="2" class="muted-cell">אין נתונים</td></tr></tbody>`;
+    return;
+  }
+  el.innerHTML = `
+    <thead><tr><th>שם</th><th class="num">${unitLabel}</th></tr></thead>
+    <tbody>${rows.map(([name, val]) => `
+      <tr><td class="name">${name}</td><td class="num">$${fmt(val)}</td></tr>
+    `).join('')}</tbody>
+    <tfoot><tr><td>סה״כ</td><td class="num">$${fmt(total)}</td></tr></tfoot>`;
+}
+
+function salaryRowsGlobal(){
+  return DATA.owners
+    .map(o => [o, (DATA.per_owner[o] && DATA.per_owner[o].salary_cost) || 0])
+    .filter(([,v]) => v > 0)
+    .sort((a,b) => b[1]-a[1]);
+}
+
+function renderMoneyTables(){
+  const t = scopeMetrics();
+  let freeRows, expRows, salaryRows, salaryTotal;
+  const totalSalary = DATA.totals.salary_cost || 0;
+  if(!filterMode){
+    document.getElementById('freeTitle').textContent = 'פרילנסרים — עלות גבוהה ביותר';
+    document.getElementById('expTitle').textContent = 'כלים והוצאות תפעול — עלות גבוהה ביותר';
+    document.getElementById('salaryTitle').textContent = 'משכורות — עלות גבוהה ביותר';
+    freeRows = DATA.top_freelancers;
+    expRows = DATA.top_expenses;
+    salaryRows = salaryRowsGlobal();
+    salaryTotal = totalSalary;
+  } else if(filterMode.type === 'owner'){
+    document.getElementById('freeTitle').textContent = `פרילנסרים — ${scopeLabel()}`;
+    document.getElementById('expTitle').textContent = `כלים והוצאות — ${scopeLabel()}`;
+    document.getElementById('salaryTitle').textContent = `משכורת — ${scopeLabel()}`;
+    freeRows = DATA.per_owner_freelancers[filterMode.value] || [];
+    expRows = DATA.per_owner_expenses[filterMode.value] || [];
+    const sc = (DATA.per_owner[filterMode.value] && DATA.per_owner[filterMode.value].salary_cost) || 0;
+    salaryRows = sc > 0 ? [[filterMode.value, sc]] : [];
+    salaryTotal = sc;
+  } else {
+    document.getElementById('freeTitle').textContent = `פרילנסרים — ${scopeLabel()}`;
+    document.getElementById('expTitle').textContent = `כלים והוצאות — ${scopeLabel()}`;
+    document.getElementById('salaryTitle').textContent = 'משכורות — כלל הצוות (אינה מתחלקת לפי פלטפורמה)';
+    freeRows = DATA.per_platform_freelancers[filterMode.value] || [];
+    expRows = DATA.per_platform_expenses[filterMode.value] || [];
+    salaryRows = salaryRowsGlobal();
+    salaryTotal = totalSalary;
+  }
+  renderMiniTable('tblFree', freeRows, 'עלות', t.freelancer_cost);
+  renderMiniTable('tblExp', expRows, 'עלות', t.other_expenses_cost);
+  renderMiniTable('tblSalary', salaryRows, 'עלות', salaryTotal);
+}
+
+/* ---------- Detail table: sortable, with a totals row ---------- */
+const DETAIL_COLS = [
+  { key:'label', label:'שם', name:true },
+  { key:'clicks', label:'לחיצות' },
+  { key:'unique_clicks', label:'לחיצות ייחודיות' },
+  { key:'registrations', label:'הרשמות' },
+  { key:'reg_rate', label:'שיעור המרה', pct:true },
+  { key:'ftds', label:'FTD' },
+  { key:'ftd_rate', label:'שיעור FTD', pct:true },
+  { key:'live_apps', label:'אפליקציות פעילות' },
+  { key:'accounts_live', label:'חשבונות פעילים' },
+  { key:'total_cost', label:'עלות כוללת', money:true },
+  { key:'costPerFtd', label:'עלות ל-FTD', money:true },
+];
+
+function sortRows(rows){
+  const dir = sortDir === 'asc' ? 1 : -1;
+  return [...rows].sort((a,b) => {
+    if(sortKey === 'label') return dir * String(a.label).localeCompare(String(b.label));
+    const av = a[sortKey], bv = b[sortKey];
+    const an = av==null, bn = bv==null;
+    if(an && bn) return 0;
+    if(an) return 1;
+    if(bn) return -1;
+    return dir * (av - bv);
+  });
+}
+
+function renderOwnerTable(){
+  const child = computeChildRows();
+  const labelHeader = (!filterMode || filterMode.type === 'platform') ? 'איש צוות' : 'פלטפורמה';
+  const cols = DETAIL_COLS.map(c => c.key === 'label' ? { ...c, label: labelHeader } : c);
+
+  const rows = child.map(r => ({ label:r.label, ...r.m, costPerFtd: r.m.ftds > 0 ? r.m.total_cost / r.m.ftds : null, linkType:r.linkType, linkValue:r.linkValue }));
+  if(!cols.find(c => c.key === sortKey)) sortKey = 'ftds';
+  const sorted = sortRows(rows);
+
+  document.getElementById('ownersTableTitle').innerHTML = filterMode
+    ? `פירוט לפי ${labelHeader} <span class="sub">${filterMode.type==='owner'?'איש צוות':'פלטפורמה'}: <b class="en">${scopeLabel()}</b> · לחצו על כותרת עמודה למיון, או על שם למעבר לתצוגה מסוננת</span>`
+    : `פירוט מלא לפי איש צוות <span class="sub">לחצו על כותרת עמודה למיון (מהגדול לקטן), או על שם למעבר לתצוגה מסוננת</span>`;
+
+  const el = document.getElementById('tblOwners');
+  if(!sorted.length){
+    el.innerHTML = `<tbody><tr><td class="muted-cell" style="padding:14px">אין נתונים להצגה.</td></tr></tbody>`;
+    return;
+  }
+
+  const thead = '<tr>' + cols.map(c => {
+    const active = sortKey === c.key;
+    const arrow = active ? (sortDir === 'desc' ? '▼' : '▲') : '↕';
+    return `<th class="sortable ${c.name?'':'num'} ${active?'active':''}" data-sort="${c.key}">${c.label}<span class="arrow">${arrow}</span></th>`;
+  }).join('') + '</tr>';
+
+  const cell = (r,c) => {
+    if(c.name){
+      return `<span class="owner-tag"><span class="dot" style="background:var(--${r.linkType==='owner'?ownerColor(r.label):platformColor(r.linkValue)})"></span><span class="en owner-link" data-${r.linkType}-link="${r.linkValue}">${r.label}</span></span>`;
+    }
+    const v = r[c.key];
+    if(v == null) return '<span class="muted-cell">—</span>';
+    if(c.pct) return v + '%';
+    if(c.money) return '$' + fmt(v);
+    return fmt(v);
+  };
+
+  const body = sorted.map(r => {
+    const noData = r.clicks===0 && r.registrations===0 && r.total_cost===0 && r.live_apps===0;
+    return '<tr>' + cols.map(c => {
+      if(c.key === 'total_cost' && noData) return `<td class="num"><span class="muted-cell">אין דיווח</span></td>`;
+      return `<td class="${c.name?'name':'num'}">${cell(r,c)}</td>`;
+    }).join('') + '</tr>';
+  }).join('');
+
+  const parent = scopeMetrics();
+  const parentCostPerFtd = parent.ftds > 0 ? parent.total_cost / parent.ftds : null;
+  const totalsRow = { label:'סה״כ', ...parent, costPerFtd: parentCostPerFtd };
+  const totalsHtml = '<tr class="totals-row">' + cols.map(c => {
+    if(c.name) return `<td class="name">${totalsRow.label}</td>`;
+    const v = totalsRow[c.key];
+    let out;
+    if(v == null) out = '—';
+    else if(c.pct) out = v + '%';
+    else if(c.money) out = '$' + fmt(v);
+    else out = fmt(v);
+    return `<td class="num">${out}</td>`;
+  }).join('') + '</tr>';
+
+  el.innerHTML = `<thead>${thead}</thead><tbody>${body}${totalsHtml}</tbody>`;
+}
+
+/* ---------- Profitability table: income (from "profit" sheet) minus operational cost ---------- */
+const PROFIT_COLS = [
+  { key:'label', label:'איש צוות', name:true },
+  { key:'income_usd', label:'הכנסה (USD)', money:true },
+  { key:'ops_cost', label:'עלות תפעולית (USD)', money:true },
+  { key:'salary_nis', label:'משכורת (₪)', nis:true },
+  { key:'salary_usd', label:'משכורת (USD)', money:true },
+  { key:'total_cost', label:'עלות כוללת (USD)', money:true },
+  { key:'profit_usd', label:'רווח (USD)', money:true },
+  { key:'margin_pct', label:'שיעור רווח', pct:true },
+];
+
+function sortProfitRows(rows){
+  const dir = profitSortDir === 'asc' ? 1 : -1;
+  return [...rows].sort((a,b) => {
+    if(profitSortKey === 'label') return dir * String(a.label).localeCompare(String(b.label));
+    const av = a[profitSortKey], bv = b[profitSortKey];
+    const an = av==null, bn = bv==null;
+    if(an && bn) return 0;
+    if(an) return 1;
+    if(bn) return -1;
+    return dir * (av - bv);
+  });
+}
+
+function renderProfitTiles(){
+  const wrap = document.getElementById('profitTiles');
+  let tiles;
+  if(filterMode && filterMode.type === 'owner' && DATA.profit[filterMode.value]){
+    const p = DATA.profit[filterMode.value];
+    if(p.has_income){
+      tiles = [
+        { label: `הכנסה — ${filterMode.value}`, value: fmtMoney(p.income_usd) },
+        { label: 'עלות כוללת (תפעול + משכורת)', value: fmtMoney(p.total_cost), delta: p.has_salary ? `כולל משכורת ${fmtNis(p.salary_nis)}` : 'ללא נתון משכורת' },
+        { label: 'רווח', value: fmtMoney(p.profit_usd), delta: p.margin_pct!=null ? `שיעור רווח <b>${p.margin_pct}%</b>` : '' },
+      ];
+    } else {
+      tiles = [
+        { label: `עלות כוללת — ${filterMode.value}`, value: fmtMoney(p.total_cost), delta: p.has_salary ? `כולל משכורת ${fmtNis(p.salary_nis)}` : 'ללא נתון משכורת' },
+        { label: 'הכנסה', value: '—', delta: 'אין רשומת הכנסה בגיליון "profit"' },
+        { label: 'רווח', value: '—', delta: 'לא ניתן לחישוב' },
+      ];
+    }
+  } else {
+    const t = DATA.profit_totals;
+    tiles = [
+      { label: `הכנסה (${t.matched_owners.length} עם נתונים מלאים)`, value: fmtMoney(t.total_income_usd_matched) },
+      { label: 'עלות כוללת', value: fmtMoney(t.total_cost_usd_matched), delta: `תפעול ${fmtMoney(t.total_ops_cost_usd_matched)} + משכורות ${fmtMoney(t.total_salary_usd_matched)}` },
+      { label: 'רווח', value: fmtMoney(t.total_profit_usd_matched), delta: `שיעור רווח <b>${(100*t.total_profit_usd_matched/t.total_income_usd_matched).toFixed(1)}%</b>` },
+    ];
+  }
+  wrap.innerHTML = tiles.map(x => `
+    <div class="tile">
+      <div class="label">${x.label}</div>
+      <div class="value">${x.value}</div>
+      ${x.delta ? `<div class="delta">${x.delta}</div>` : ''}
+    </div>`).join('');
+}
+
+function renderProfitTable(){
+  renderProfitTiles();
+
+  const rows = DATA.owners.map(o => ({ label:o, ...DATA.profit[o] }));
+  const sorted = sortProfitRows(rows);
+
+  const el = document.getElementById('tblProfit');
+  const thead = '<tr>' + PROFIT_COLS.map(c => {
+    const active = profitSortKey === c.key;
+    const arrow = active ? (profitSortDir === 'desc' ? '▼' : '▲') : '↕';
+    return `<th class="sortable ${c.name?'':'num'} ${active?'active':''}" data-psort="${c.key}">${c.label}<span class="arrow">${arrow}</span></th>`;
+  }).join('') + '</tr>';
+
+  const cell = (r,c) => {
+    if(c.name){
+      const highlight = filterMode && filterMode.type==='owner' && filterMode.value===r.label ? 'style="text-decoration:underline"' : '';
+      return `<span class="owner-tag"><span class="dot" style="background:var(--${ownerColor(r.label)})"></span><span class="en owner-link" ${highlight} data-owner-link="${r.label}">${r.label}</span></span>`;
+    }
+    const v = r[c.key];
+    if(v == null) return '<span class="muted-cell">—</span>';
+    if(c.pct) return v + '%';
+    if(c.nis) return fmtNis(v);
+    if(c.money) return '$' + fmt(v);
+    return fmt(v);
+  };
+
+  const body = sorted.map(r => '<tr>' + PROFIT_COLS.map(c =>
+    `<td class="${c.name?'name':'num'}">${cell(r,c)}</td>`
+  ).join('') + '</tr>').join('');
+
+  const t = DATA.profit_totals;
+  const totalsRow = { label:'סה״כ (עם נתונים מלאים)', income_usd:t.total_income_usd_matched,
+    ops_cost:t.total_ops_cost_usd_matched, salary_nis:null, salary_usd:t.total_salary_usd_matched,
+    total_cost:t.total_cost_usd_matched, profit_usd:t.total_profit_usd_matched,
+    margin_pct: Math.round(1000*t.total_profit_usd_matched/t.total_income_usd_matched)/10 };
+  const totalsHtml = '<tr class="totals-row">' + PROFIT_COLS.map(c => {
+    if(c.name) return `<td class="name">${totalsRow.label}</td>`;
+    const v = totalsRow[c.key];
+    let out;
+    if(v == null) out = '—';
+    else if(c.pct) out = v + '%';
+    else if(c.nis) out = fmtNis(v);
+    else if(c.money) out = '$' + fmt(v);
+    else out = fmt(v);
+    return `<td class="num">${out}</td>`;
+  }).join('') + '</tr>';
+
+  el.innerHTML = `<thead>${thead}</thead><tbody>${body}${totalsHtml}</tbody>`;
+
+  const dolev = DATA.profit_unmatched.Dolev;
+  const otherUnmatched = Object.keys(DATA.profit_unmatched).filter(n => n !== 'Dolev');
+  const otherUnmatchedIncome = otherUnmatched.reduce((s,n) => s+DATA.profit_unmatched[n].income_usd, 0);
+  document.getElementById('profitNote').innerHTML =
+    `<b>לגבי הרווחיות:</b> משכורות הוזנו בש״ח והומרו לדולר לפי שער <b class="en">${DATA.profit_totals.exchange_rate.toFixed(2)}</b> ₪ לדולר (נגזר מהיחס בין ההכנסה בש״ח לדולר בגיליון "profit"). ` +
+    `המשכורת של <b>Kristina</b> כוללת גם את <b class="en">Andreay</b>, העובד תחתיה. ל-<b>Lera</b> לא סופק נתון משכורת ולכן אינו נכלל בעלות שלה. ` +
+    `ל-<b>Lera</b> ו-<b>Kristina</b> אין רשומת הכנסה בגיליון "profit" החודש, כך שלא ניתן לחשב עבורן רווח. ` +
+    (dolev ? `בנוסף, <b class="en">Dolev</b> (הכנסה ${fmtMoney(dolev.income_usd)}, משכורת ${fmtNis(dolev.salary_nis)}) אינו חלק מצוות התפעול ואין לו גיליון עלויות — הרווח החלקי המשוער עבורו (משכורת בלבד) הוא <b class="en">${fmtMoney(dolev.partial_profit_usd)}</b>. ` : '') +
+    (otherUnmatched.length ? `<b class="en">${otherUnmatched.join(', ')}</b> (סה״כ הכנסה ${fmtMoney(otherUnmatchedIncome)}) גם אינם חלק מהצוות ואין להם נתון משכורת, ולכן אינם מופיעים בטבלה. ` : '') +
+    `עלות "נדרש לחודש הבא" בחשבונות אינה נכללת בעלות התפעולית (תקציב מתוכנן, לא הוצאה בפועל).`;
+}
+
+function renderAll(){
+  renderFilterBar();
+  renderFilterBanner();
+  renderTiles();
+  renderFunnel();
+  renderOwnerBars();
+  renderDonut();
+  renderCostBars();
+  renderMoneyTables();
+  renderOwnerTable();
+  renderProfitTable();
+}
+
+/* ---------- Global interactions: click-to-filter, click-to-sort ---------- */
+document.addEventListener('click', (e) => {
+  const all = e.target.closest('[data-filter-link]');
+  if(all){ setFilter(null, null); return; }
+  const ownerLink = e.target.closest('[data-owner-link]');
+  if(ownerLink){ setFilter('owner', ownerLink.dataset.ownerLink); return; }
+  const platLink = e.target.closest('[data-platform-link]');
+  if(platLink){ setFilter('platform', platLink.dataset.platformLink); return; }
+  const th = e.target.closest('th[data-sort]');
+  if(th){
+    const key = th.dataset.sort;
+    if(sortKey === key){ sortDir = sortDir === 'desc' ? 'asc' : 'desc'; }
+    else { sortKey = key; sortDir = key === 'label' ? 'asc' : 'desc'; }
+    renderOwnerTable();
+    return;
+  }
+  const pth = e.target.closest('th[data-psort]');
+  if(pth){
+    const key = pth.dataset.psort;
+    if(profitSortKey === key){ profitSortDir = profitSortDir === 'desc' ? 'asc' : 'desc'; }
+    else { profitSortKey = key; profitSortDir = key === 'label' ? 'asc' : 'desc'; }
+    renderProfitTable();
+  }
+});
+
+filterMode = readHashFilter();
+renderAll();
+window.addEventListener('hashchange', () => { filterMode = readHashFilter(); renderAll(); });
+window.addEventListener('resize', () => { renderOwnerBars(); renderCostBars(); });
+if(window.matchMedia){
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', renderAll);
+}
+</script>
+
+</div><script>
+(function(){
+  var TOKEN_KEY = "keitaro_dashboard_token";
+  var TOKEN_EXPIRY_KEY = "keitaro_dashboard_token_expiry";
+  var REMEMBER_MS = 7 * 24 * 60 * 60 * 1000;
+
+  function validateToken(token){
+    return fetch('/api/keitaro-filters', { headers: { 'x-api-token': token } }).then(function(res){ return res.status; });
+  }
+
+  function showApp(){
+    document.getElementById('loginView').hidden = true;
+    document.getElementById('appView').hidden = false;
+  }
+  function showLogin(){
+    document.getElementById('loginView').hidden = false;
+    document.getElementById('appView').hidden = true;
+  }
+  function clearSession(){
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(TOKEN_EXPIRY_KEY);
+  }
+
+  function login(password){
+    var errEl = document.getElementById('loginError');
+    errEl.textContent = '';
+    validateToken(password).then(function(status){
+      if(status !== 200){ throw new Error('bad'); }
+      localStorage.setItem(TOKEN_KEY, password);
+      localStorage.setItem(TOKEN_EXPIRY_KEY, String(Date.now() + REMEMBER_MS));
+      showApp();
+      
+    }).catch(function(){
+      clearSession();
+      errEl.textContent = 'Incorrect password.';
+    });
+  }
+
+  document.getElementById('loginForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    login(document.getElementById('password').value);
+  });
+  var logoutBtn = document.getElementById('logoutBtn');
+  if(logoutBtn){
+    logoutBtn.addEventListener('click', function(){
+      clearSession();
+      location.reload();
+    });
+  }
+
+  var savedToken = localStorage.getItem(TOKEN_KEY);
+  var savedExpiry = Number(localStorage.getItem(TOKEN_EXPIRY_KEY) || 0);
+  if(savedToken && Date.now() < savedExpiry){
+    showApp();
+    validateToken(savedToken).then(function(status){
+      if(status === 401){ clearSession(); showLogin(); }
+    });
+  } else {
+    clearSession();
+  }
+})();
+</script></body>
+</html>

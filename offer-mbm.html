@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Offer Analysis - Keitaro</title>
+<style>
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f5f7fb;color:#172033;overflow-x:hidden}
+.wrap{max-width:1180px;margin:auto;padding:24px 14px 40px}
+h1{margin:0 0 6px;font-size:28px}.sub{color:#6b7280;margin-bottom:18px}
+.topbar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+.nav{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.nav a{color:#172033;text-decoration:none;font-size:14px;padding:9px 14px;border-radius:10px;border:1px solid #d1d5db;background:#fff;cursor:pointer;-webkit-tap-highlight-color:rgba(17,24,39,.15);touch-action:manipulation}
+.nav a:hover{border-color:#9ca3af}
+.nav a:active{background:#f3f4f6}
+.nav a.active{background:#111827;color:#fff;border-color:#111827}
+.nav a.active:hover{border-color:#111827}
+.nav a.active:active{background:#1f2937}
+.login{max-width:420px;margin:12vh auto 0;background:#fff;border:1px solid #e5e7eb;border-radius:20px;padding:26px;box-shadow:0 12px 32px rgba(17,24,39,.08)}
+.login h1{font-size:26px;margin-bottom:8px}.login p{color:#6b7280;margin-top:0}
+input{padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;font-size:15px;direction:ltr;box-sizing:border-box;max-width:100%}
+input[type=password]{width:100%}
+button{border:0;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;cursor:pointer}
+.primary{width:100%;margin-top:12px;background:#111827;color:#fff}
+.logout{background:#fff;border:1px solid #d1d5db}
+.error{color:#b91c1c;margin-top:10px;font-size:14px;min-height:20px}
+.hidden{display:none}
+.updating-badge{font-size:12px;color:#6b7280;font-weight:600}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.filters button{background:#fff;border:1px solid #d1d5db;color:#172033}
+.filters .range{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.filters .range[hidden]{display:none}
+.filters input[type=date]{min-width:0;flex:1 1 128px}
+#entityFilters input[type=text]{flex:1 1 150px;min-width:0}
+#rangeSelect{background:#fff;border:1px solid #d1d5db;color:#172033;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;cursor:pointer;min-width:160px}
+.loading-overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;gap:12px;flex-direction:column;background:rgba(245,247,251,.72);z-index:50;opacity:0;pointer-events:none;transition:opacity .15s}
+.loading-overlay.active{opacity:1;pointer-events:auto}
+.progress-bar-track{width:220px;height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden}
+.progress-bar-fill{height:100%;width:0%;background:#111827;border-radius:999px;transition:width .2s linear}
+.loading-overlay span{font-size:14px;color:#6b7280;font-weight:600}
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px;margin-bottom:20px}
+.kpi{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:16px 18px;box-shadow:0 8px 24px rgba(17,24,39,.06)}
+.kpi .label{font-size:13px;color:#6b7280;margin-bottom:6px}
+.kpi .value{font-size:26px;font-weight:700}
+.panel{background:#fff;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;box-shadow:0 8px 24px rgba(17,24,39,.06);margin-bottom:20px}
+.panel h2{margin:0;padding:15px 18px;font-size:17px;background:#111827;color:#fff}
+.panel .body{padding:16px 18px;overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px 12px;border-bottom:1px solid #e5e7eb;text-align:left;font-size:14px;white-space:nowrap}
+th{background:#fafafa;font-weight:600}
+th.sortable{cursor:pointer;user-select:none}
+th.sortable:hover{background:#f0f1f3}
+th .arrow{font-size:10px;margin-left:4px;color:#9ca3af}
+tr:last-child td{border-bottom:none}
+.muted{color:#6b7280;padding:20px;text-align:center}
+.rate-good{color:#059669;font-weight:700}
+.rate-bad{color:#dc2626;font-weight:700}
+.legend-note{font-size:12px;color:#6b7280;margin:-6px 0 16px}
+#content{transition:opacity .15s}
+@media(max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.kpis{grid-template-columns:1fr}.login{margin:8vh 12px 0}}
+</style>
+</head>
+<body>
+<section id="loginView" class="login">
+  <h1>Offer Analysis</h1>
+  <p>Enter the password to view offer performance data.</p>
+  <form id="loginForm">
+    <input id="password" type="password" autocomplete="current-password" placeholder="Password" required>
+    <button class="primary" type="submit">Login</button>
+    <div id="loginError" class="error"></div>
+  </form>
+</section>
+
+<div id="loadingOverlay" class="loading-overlay"><div class="progress-bar-track"><div class="progress-bar-fill" id="progressFill"></div></div><span id="progressPct">Loading… 0%</span></div>
+
+<main id="appView" class="wrap hidden">
+  <div class="topbar">
+    <div><h1>Offer Analysis</h1><div class="sub" id="rangeLabel"></div></div>
+    <span id="updatingBadge" class="updating-badge hidden">Updating…</span>
+    <button id="refreshBtn" class="logout" type="button">↻ Refresh</button>
+    <button id="logoutBtn" class="logout">Logout</button>
+  </div>
+
+  <div class="nav">
+    <a href="keitaro-mbm.html">General Dashboard</a>
+    <a href="keitaro-groups-mbm.html">By Group</a>
+    <a href="ltv.html">LTV Report</a>
+    <a href="ranking.html">Ranking</a>
+    <a href="commission.html">Commission</a>
+    <a href="commission_worker.html">Commission Worker</a>
+    <a href="operations.html">Operations Report</a>
+    <a href="operations-september.html">Operations September</a>
+    <a href="ftd.html">FTD</a>
+    <a href="offer-mbm.html" class="active">Offer</a>
+    <a href="chat-mbm.html">Chat</a>
+    <a href="domain.html">Domains</a>
+    <a href="domain_traffic.html">Traffic</a>
+    <a href="keitaro_domains.html">Domains (DB)</a>
+    <a href="onesignal.html">OneSignal</a>
+    <a href="zone.html">Zones</a>
+    <a href="keitaro_amz_group.html">Keitaro Groups</a>
+    <a href="namecheap.html">Namecheap</a>
+  </div>
+
+  <div class="filters" id="filters">
+    <select id="rangeSelect">
+      <option value="range:1">Today</option>
+      <option value="range:7">Last 7 Days</option>
+      <option value="range:30" selected>Last 30 Days</option>
+      <option value="range:90">Last 90 Days</option>
+      <option value="preset:yesterday">Yesterday</option>
+      <option value="preset:lastweek">Last Week</option>
+      <option value="preset:lastmonth">Last Month</option>
+      <option value="custom">Custom Range…</option>
+    </select>
+    <div class="range" id="customRange" hidden>
+      <input type="date" id="fromInput">
+      <span>to</span>
+      <input type="date" id="toInput">
+      <button id="applyRange">Apply</button>
+    </div>
+  </div>
+
+  <div class="filters" id="entityFilters">
+    <input type="text" id="filterGroup" list="groupOptions" placeholder="Filter by group">
+    <datalist id="groupOptions"></datalist>
+    <input type="text" id="filterCountry" list="countryOptions" placeholder="Filter by country">
+    <datalist id="countryOptions"></datalist>
+    <button id="clearFilters" class="logout">Clear Filters</button>
+  </div>
+
+  <div id="content">
+    <div class="kpis">
+      <div class="kpi"><div class="label">Total Clicks</div><div class="value" id="kpiClicks">-</div></div>
+      <div class="kpi"><div class="label">Total Reg</div><div class="value" id="kpiReg">-</div></div>
+      <div class="kpi"><div class="label">Total FTD</div><div class="value" id="kpiFtd">-</div></div>
+      <div class="kpi"><div class="label">Click → Reg</div><div class="value" id="kpiC2R">-</div></div>
+      <div class="kpi"><div class="label">Click → FTD</div><div class="value" id="kpiC2F">-</div></div>
+      <div class="kpi"><div class="label">Reg → FTD</div><div class="value" id="kpiR2F">-</div></div>
+    </div>
+
+    <div class="panel">
+      <h2>By Offer</h2>
+      <div class="body">
+        <div class="legend-note">Green = at or above the overall average rate · Red = below average</div>
+        <table><thead><tr>
+          <th class="sortable" data-table="offer" data-sort="key" data-label="Offer">Offer</th>
+          <th class="sortable" data-table="offer" data-sort="clicks" data-label="Clicks">Clicks</th>
+          <th class="sortable" data-table="offer" data-sort="regs" data-label="Reg">Reg</th>
+          <th class="sortable" data-table="offer" data-sort="ftds" data-label="FTD">FTD</th>
+          <th class="sortable" data-table="offer" data-sort="click2reg" data-label="Click → Reg">Click → Reg</th>
+          <th class="sortable" data-table="offer" data-sort="click2ftd" data-label="Click → FTD">Click → FTD</th>
+          <th class="sortable" data-table="offer" data-sort="reg2ftd" data-label="Reg → FTD">Reg → FTD</th>
+        </tr></thead><tbody id="tblOffer"></tbody></table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>By Country</h2>
+      <div class="body">
+        <table><thead><tr>
+          <th class="sortable" data-table="country" data-sort="key" data-label="Country">Country</th>
+          <th class="sortable" data-table="country" data-sort="clicks" data-label="Clicks">Clicks</th>
+          <th class="sortable" data-table="country" data-sort="regs" data-label="Reg">Reg</th>
+          <th class="sortable" data-table="country" data-sort="ftds" data-label="FTD">FTD</th>
+          <th class="sortable" data-table="country" data-sort="click2reg" data-label="Click → Reg">Click → Reg</th>
+          <th class="sortable" data-table="country" data-sort="click2ftd" data-label="Click → FTD">Click → FTD</th>
+          <th class="sortable" data-table="country" data-sort="reg2ftd" data-label="Reg → FTD">Reg → FTD</th>
+        </tr></thead><tbody id="tblCountry"></tbody></table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>By Group</h2>
+      <div class="body">
+        <table><thead><tr>
+          <th class="sortable" data-table="group" data-sort="key" data-label="Group">Group</th>
+          <th class="sortable" data-table="group" data-sort="clicks" data-label="Clicks">Clicks</th>
+          <th class="sortable" data-table="group" data-sort="regs" data-label="Reg">Reg</th>
+          <th class="sortable" data-table="group" data-sort="ftds" data-label="FTD">FTD</th>
+          <th class="sortable" data-table="group" data-sort="click2reg" data-label="Click → Reg">Click → Reg</th>
+          <th class="sortable" data-table="group" data-sort="click2ftd" data-label="Click → FTD">Click → FTD</th>
+          <th class="sortable" data-table="group" data-sort="reg2ftd" data-label="Reg → FTD">Reg → FTD</th>
+        </tr></thead><tbody id="tblGroup"></tbody></table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+const API_BASE = "";
+const TOKEN_KEY = "keitaro_dashboard_token";
+const TOKEN_EXPIRY_KEY = "keitaro_dashboard_token_expiry";
+const EXPECTED_SCOPE = "main";
+const REMEMBER_MS = 7 * 24 * 60 * 60 * 1000;
+
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function fmt(n){return Number(n||0).toLocaleString('en-US');}
+function pct(n){return Number(n||0).toFixed(1) + '%';}
+function toISO(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+
+const CACHE_PREFIX = 'keitaro_cache_';
+function todayKey(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function getCached(key){
+  try{
+    const raw = localStorage.getItem(CACHE_PREFIX + key);
+    if(!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed.day === todayKey() ? parsed.data : null;
+  }catch{ return null; }
+}
+// Like getCached, but also returns data from a previous day (marked not-fresh) so the
+// page can render instantly from last-known data while fresh data loads in the background,
+// instead of blocking on a full page load every time the daily cache expires.
+function peekCached(key){
+  try{
+    const raw = localStorage.getItem(CACHE_PREFIX + key);
+    if(!raw) return null;
+    const parsed = JSON.parse(raw);
+    return { data: parsed.data, fresh: parsed.day === todayKey() };
+  }catch{ return null; }
+}
+function purgeStaleCache(){
+  // Keep a few days of history (instead of wiping anything not from today) so a stale
+  // entry is still available for the instant-render-then-refresh flow above.
+  const cutoff = Date.now() - 3*86400000;
+  for(let i = localStorage.length - 1; i >= 0; i--){
+    const k = localStorage.key(i);
+    if(!k || !k.startsWith(CACHE_PREFIX)) continue;
+    try{
+      const day = JSON.parse(localStorage.getItem(k)).day;
+      if(new Date(day + 'T00:00:00').getTime() < cutoff) localStorage.removeItem(k);
+    }catch{ localStorage.removeItem(k); }
+  }
+}
+function setCached(key, data){
+  try{
+    localStorage.setItem(CACHE_PREFIX + key, JSON.stringify({ day: todayKey(), data }));
+    purgeStaleCache();
+  }catch{}
+}
+
+async function apiFetch(from, to, token, filters){
+  // Reg/FTD now sourced from keitaro_conversions_report (see keitaro-mbm.html rollout).
+  const params = new URLSearchParams({ from, to, source: 'report', ...(filters||{}) });
+  const url = `${API_BASE}/api/offer?${params.toString()}`;
+  const cached = getCached(url);
+  if(cached) return cached;
+  const res = await fetch(url, { headers: { 'x-api-token': token } });
+  if(!res.ok) throw new Error('REQUEST_FAILED_' + res.status);
+  const data = await res.json();
+  if(data.scope !== EXPECTED_SCOPE) throw new Error('REQUEST_FAILED_401');
+  setCached(url, data);
+  return data;
+}
+
+let filterOptions = { groups: [], countries: [] };
+
+async function loadFilterOptions(token){
+  const url = `${API_BASE}/api/keitaro-filters`;
+  const cached = getCached(url);
+  if(cached){
+    filterOptions = cached;
+    fillDatalist('groupOptions', filterOptions.groups);
+    fillDatalist('countryOptions', filterOptions.countries);
+    return;
+  }
+  try{
+    const res = await fetch(url, { headers: { 'x-api-token': token } });
+    if(!res.ok) return;
+    filterOptions = await res.json();
+    setCached(url, filterOptions);
+    fillDatalist('groupOptions', filterOptions.groups);
+    fillDatalist('countryOptions', filterOptions.countries);
+  }catch{}
+}
+
+function fillDatalist(id, values){
+  document.getElementById(id).innerHTML = (values||[]).map(v=>`<option value="${esc(v)}"></option>`).join('');
+}
+
+function currentFilters(){
+  const group = document.getElementById('filterGroup').value.trim();
+  const country = document.getElementById('filterCountry').value.trim();
+  const filters = {};
+  if(group && filterOptions.groups.includes(group)) filters.groupName = group;
+  if(country && filterOptions.countries.includes(country)) filters.countryCode = country;
+  return filters;
+}
+
+function withRates(rows){
+  return rows.map(r=>({
+    ...r,
+    click2reg: r.clicks ? r.regs/r.clicks*100 : 0,
+    click2ftd: r.clicks ? r.ftds/r.clicks*100 : 0,
+    reg2ftd: r.regs ? r.ftds/r.regs*100 : 0,
+  }));
+}
+
+function mergeRows(clicksRows, convRows, clickKeyFn, convKeyFn, nameFromClick, nameFromConv){
+  const map = new Map();
+  clicksRows.forEach(r=>{
+    const key = clickKeyFn(r);
+    map.set(key, { key, name: nameFromClick(r), clicks: Number(r.clicks)||0, unique_clicks: Number(r.unique_clicks)||0, regs: 0, ftds: 0 });
+  });
+  convRows.forEach(r=>{
+    const key = convKeyFn(r);
+    const row = map.get(key) || { key, name: null, clicks: 0, unique_clicks: 0, regs: 0, ftds: 0 };
+    const convName = nameFromConv(r);
+    if(convName) row.name = convName;
+    row.regs = Number(r.regs)||0;
+    row.ftds = Number(r.ftds)||0;
+    map.set(key, row);
+  });
+  return Array.from(map.values());
+}
+
+let lastData = null;
+
+function rateClass(value, avg){
+  return value >= avg ? 'rate-good' : 'rate-bad';
+}
+
+function renderOfferRows(rows, avg){
+  if(!rows.length) return `<tr><td colspan="7" class="muted">No data</td></tr>`;
+  return rows.map(r=>`<tr>
+    <td>${esc(r.name)}</td>
+    <td>${fmt(r.clicks)}</td>
+    <td>${fmt(r.regs)}</td>
+    <td>${fmt(r.ftds)}</td>
+    <td class="${rateClass(r.click2reg, avg.click2reg)}">${pct(r.click2reg)}</td>
+    <td class="${rateClass(r.click2ftd, avg.click2ftd)}">${pct(r.click2ftd)}</td>
+    <td class="${rateClass(r.reg2ftd, avg.reg2ftd)}">${pct(r.reg2ftd)}</td>
+  </tr>`).join('');
+}
+
+const tableSort = {
+  offer: { key: 'clicks', dir: 'desc' },
+  country: { key: 'clicks', dir: 'desc' },
+  group: { key: 'clicks', dir: 'desc' },
+};
+
+function sortRows(rows, sort){
+  const { key, dir } = sort;
+  const mul = dir === 'asc' ? 1 : -1;
+  return [...rows].sort((a,b)=>{
+    let av = a[key], bv = b[key];
+    if(key === 'key'){ av = String(av).toLowerCase(); bv = String(bv).toLowerCase(); }
+    if(av < bv) return -1*mul;
+    if(av > bv) return 1*mul;
+    return 0;
+  });
+}
+
+function renderTableHeaders(){
+  document.querySelectorAll('th.sortable').forEach(th=>{
+    const table = th.dataset.table, sortKey = th.dataset.sort, label = th.dataset.label;
+    const active = tableSort[table] && tableSort[table].key === sortKey;
+    const arrow = active ? (tableSort[table].dir === 'asc' ? '▲' : '▼') : '';
+    th.innerHTML = `${esc(label)}${arrow ? ` <span class="arrow">${arrow}</span>` : ''}`;
+  });
+}
+
+document.querySelectorAll('th.sortable').forEach(th=>{
+  th.addEventListener('click', ()=>{
+    const table = th.dataset.table, sortKey = th.dataset.sort;
+    const cur = tableSort[table];
+    if(cur.key === sortKey){ cur.dir = cur.dir === 'asc' ? 'desc' : 'asc'; }
+    else { cur.key = sortKey; cur.dir = sortKey === 'key' ? 'asc' : 'desc'; }
+    if(lastData) renderAll(lastData);
+  });
+});
+
+function renderAll(data){
+  lastData = data;
+  const clicks = Number(data.totals.clicks)||0;
+  const regs = Number(data.totals.regs)||0;
+  const ftds = Number(data.totals.ftds)||0;
+  const overallAvg = {
+    click2reg: clicks ? regs/clicks*100 : 0,
+    click2ftd: clicks ? ftds/clicks*100 : 0,
+    reg2ftd: regs ? ftds/regs*100 : 0,
+  };
+
+  document.getElementById('kpiClicks').textContent = fmt(clicks);
+  document.getElementById('kpiReg').textContent = fmt(regs);
+  document.getElementById('kpiFtd').textContent = fmt(ftds);
+  document.getElementById('kpiC2R').textContent = pct(overallAvg.click2reg);
+  document.getElementById('kpiC2F').textContent = pct(overallAvg.click2ftd);
+  document.getElementById('kpiR2F').textContent = pct(overallAvg.reg2ftd);
+  document.getElementById('rangeLabel').textContent = `${data.from} to ${data.to}`;
+
+  const offerRows = withRates(mergeRows(
+    data.clicksByOffer, data.convByOffer,
+    r => r.offer_id==null ? 'null' : String(r.offer_id),
+    r => r.offer_id==null ? 'null' : String(r.offer_id),
+    r => r.offer_id ? `#${r.offer_id}` : 'No Offer',
+    r => r.offer_name
+  )).map(r=>({ ...r, name: r.name || 'No Offer' }));
+
+  const countryRows = withRates(mergeRows(
+    data.clicksByCountry, data.convByCountry,
+    r => r.country_code || 'Unknown',
+    r => r.country || 'Unknown',
+    r => r.country_code || 'Unknown',
+    () => null
+  ));
+
+  const groupRows = withRates(mergeRows(
+    data.clicksByGroup, data.convByGroup,
+    r => r.group_name || (r.campaign_group_id ? `#${r.campaign_group_id}` : 'No Group'),
+    r => r.group_name || (r.group_id ? `#${r.group_id}` : 'No Group'),
+    r => r.group_name || (r.campaign_group_id ? `#${r.campaign_group_id}` : 'No Group'),
+    r => r.group_name
+  )).map(r=>({ ...r, name: r.name || r.key }));
+
+  renderTableHeaders();
+  document.getElementById('tblOffer').innerHTML = renderOfferRows(sortRows(offerRows, tableSort.offer), overallAvg);
+  document.getElementById('tblCountry').innerHTML = renderOfferRows(sortRows(countryRows, tableSort.country), overallAvg);
+  document.getElementById('tblGroup').innerHTML = renderOfferRows(sortRows(groupRows, tableSort.group), overallAvg);
+}
+
+let state = { from: null, to: null };
+
+let progressTimer = null;
+function setLoading(isLoading){
+  document.getElementById('loadingOverlay').classList.toggle('active', isLoading);
+  document.getElementById('content').style.opacity = isLoading ? '0.5' : '1';
+  const fill = document.getElementById('progressFill');
+  const pctEl = document.getElementById('progressPct');
+  clearInterval(progressTimer);
+  if(isLoading){
+    const startTime = Date.now();
+    const DURATION_MS = 110000;
+    fill.style.width = '0%';
+    pctEl.textContent = 'Loading… 0%';
+    progressTimer = setInterval(()=>{
+      const elapsed = Date.now() - startTime;
+      const pct = Math.min(99, Math.round(elapsed / DURATION_MS * 100));
+      fill.style.width = pct + '%';
+      pctEl.textContent = `Loading… ${pct}%`;
+    }, 200);
+  }
+}
+
+function setUpdating(isUpdating){
+  const el = document.getElementById('updatingBadge');
+  if(el) el.classList.toggle('hidden', !isUpdating);
+}
+
+async function loadRange(from, to){
+  state.from = from; state.to = to;
+  const token = localStorage.getItem(TOKEN_KEY);
+  setLoading(true);
+  try{
+    const data = await apiFetch(from, to, token, currentFilters());
+    renderAll(data);
+  } finally {
+    setLoading(false);
+  }
+}
+
+function reloadWithFilters(){
+  if(state.from && state.to) loadRange(state.from, state.to);
+}
+
+['filterGroup','filterCountry'].forEach(id=>{
+  document.getElementById(id).addEventListener('change', reloadWithFilters);
+});
+document.getElementById('clearFilters').addEventListener('click', ()=>{
+  document.getElementById('filterGroup').value = '';
+  document.getElementById('filterCountry').value = '';
+  reloadWithFilters();
+});
+
+function applyPreset(days){
+  const to = new Date();
+  const from = new Date(Date.now() - (days-1)*86400000);
+  document.getElementById('fromInput').value = toISO(from);
+  document.getElementById('toInput').value = toISO(to);
+  loadRange(toISO(from), toISO(to));
+}
+
+function applyCalendarPreset(preset){
+  const now = new Date();
+  let from, to;
+  if(preset === 'yesterday'){
+    from = to = new Date(now.getFullYear(), now.getMonth(), now.getDate()-1);
+  } else if(preset === 'lastweek'){
+    const thisSunday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
+    from = new Date(thisSunday.getFullYear(), thisSunday.getMonth(), thisSunday.getDate() - 7);
+    to = new Date(thisSunday.getFullYear(), thisSunday.getMonth(), thisSunday.getDate() - 1);
+  } else if(preset === 'lastmonth'){
+    from = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    to = new Date(now.getFullYear(), now.getMonth(), 0);
+  }
+  document.getElementById('fromInput').value = toISO(from);
+  document.getElementById('toInput').value = toISO(to);
+  loadRange(toISO(from), toISO(to));
+}
+
+document.getElementById('rangeSelect').addEventListener('change', e=>{
+  const value = e.target.value;
+  const customRange = document.getElementById('customRange');
+  if(value === 'custom'){
+    customRange.hidden = false;
+    return;
+  }
+  customRange.hidden = true;
+  const [kind, arg] = value.split(':');
+  if(kind === 'range') applyPreset(Number(arg));
+  else if(kind === 'preset') applyCalendarPreset(arg);
+});
+document.getElementById('applyRange').addEventListener('click', ()=>{
+  const from = document.getElementById('fromInput').value;
+  const to = document.getElementById('toInput').value;
+  if(from && to) loadRange(from, to);
+});
+
+function showApp(){
+  document.getElementById('loginView').classList.add('hidden');
+  document.getElementById('appView').classList.remove('hidden');
+}
+function showLogin(){
+  document.getElementById('loginView').classList.remove('hidden');
+  document.getElementById('appView').classList.add('hidden');
+}
+function clearSession(){
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(TOKEN_EXPIRY_KEY);
+}
+
+async function loadInto(token){
+  const today = new Date();
+  const from = new Date(Date.now() - 29*86400000);
+  setLoading(true);
+  try{
+    const data = await apiFetch(toISO(from), toISO(today), token);
+    state.from = toISO(from); state.to = toISO(today);
+    document.getElementById('fromInput').value = toISO(from);
+    document.getElementById('toInput').value = toISO(today);
+    renderAll(data);
+    loadFilterOptions(token);
+  } finally {
+    setLoading(false);
+  }
+}
+
+async function loginWithPassword(password){
+  document.getElementById('loginError').textContent = '';
+  try{
+    await loadInto(password);
+    localStorage.setItem(TOKEN_KEY, password);
+    localStorage.setItem(TOKEN_EXPIRY_KEY, String(Date.now() + REMEMBER_MS));
+    showApp();
+  } catch {
+    clearSession();
+    document.getElementById('loginError').textContent = 'Incorrect password.';
+  }
+}
+
+async function resumeSession(token){
+  // Trust the saved 7-day session immediately; only kick back to login on a genuine 401,
+  // never on a slow/failed data request (so a flaky API call can't wipe a valid session).
+  showApp();
+  const today = new Date();
+  const from = new Date(Date.now() - 29*86400000);
+  const url = `${API_BASE}/api/offer?${new URLSearchParams({ from: toISO(from), to: toISO(today), source: 'report' }).toString()}`;
+  const cached = peekCached(url);
+
+  if(cached){
+    // Instant render from last-known data (even if from a previous day) instead of
+    // blocking on a fresh fetch every time the daily cache expires.
+    state.from = toISO(from); state.to = toISO(today);
+    document.getElementById('fromInput').value = toISO(from);
+    document.getElementById('toInput').value = toISO(today);
+    renderAll(cached.data);
+    loadFilterOptions(token);
+    if(!cached.fresh){
+      setUpdating(true);
+      try{
+        const data = await apiFetch(toISO(from), toISO(today), token);
+        state.from = toISO(from); state.to = toISO(today);
+        renderAll(data);
+      } catch(err){
+        if(err && err.message === 'REQUEST_FAILED_401'){
+          clearSession();
+          showLogin();
+          document.getElementById('loginError').textContent = 'Your session expired, please log in again.';
+        }
+        // else: keep showing the last-known data silently; don't disrupt the user over a background refresh hiccup
+      } finally {
+        setUpdating(false);
+      }
+    }
+    return;
+  }
+
+  // No usable cache yet (first-ever visit) — fall back to the original blocking load.
+  try{
+    await loadInto(token);
+  } catch(err){
+    if(err && err.message === 'REQUEST_FAILED_401'){
+      clearSession();
+      showLogin();
+      document.getElementById('loginError').textContent = 'Your session expired, please log in again.';
+    } else {
+      document.getElementById('rangeLabel').textContent = 'Error loading data — try refreshing the page';
+    }
+  }
+}
+
+document.getElementById('loginForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  loginWithPassword(document.getElementById('password').value);
+});
+document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  clearSession();
+  location.reload();
+});
+
+function clearAllCache(){
+  for(let i = localStorage.length - 1; i >= 0; i--){
+    const k = localStorage.key(i);
+    if(k && k.startsWith(CACHE_PREFIX)) localStorage.removeItem(k);
+  }
+}
+document.getElementById('refreshBtn').addEventListener('click', ()=>{
+  clearAllCache();
+  if(state.from && state.to) loadRange(state.from, state.to);
+});
+
+const savedToken = localStorage.getItem(TOKEN_KEY);
+const savedExpiry = Number(localStorage.getItem(TOKEN_EXPIRY_KEY) || 0);
+if(savedToken && Date.now() < savedExpiry){
+  resumeSession(savedToken);
+} else {
+  clearSession();
+}
+</script>
+</body>
+</html>

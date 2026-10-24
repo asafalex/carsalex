@@ -1,0 +1,1452 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rank Radar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f3f5f7;
+    --surface:#ffffff;
+    --surface-2:#eaeef2;
+    --surface-hover:#e2e7ec;
+    --border:#dbe1e7;
+    --border-strong:#c3ccd4;
+    --text:#141a21;
+    --text-muted:#5b6570;
+    --text-faint:#8a939c;
+    --accent:#a06a1f;
+    --accent-strong:#7d5217;
+    --accent-tint:#f2e2c6;
+    --good:#1c8a5c;
+    --good-tint:#dcf1e6;
+    --bad:#c1442f;
+    --bad-tint:#f7e2dd;
+    --chart-line:#3457c9;
+    --chart-grid:#d7dde3;
+    --gold:#b9832c;
+    --silver:#8f97a1;
+    --bronze:#a56b3b;
+    --shadow: 0 1px 2px rgba(20,26,33,0.04), 0 8px 24px -12px rgba(20,26,33,0.10);
+    --focus:#3457c9;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#10141a;
+      --surface:#161c24;
+      --surface-2:#1d2530;
+      --surface-hover:#242e3b;
+      --border:#2a3441;
+      --border-strong:#3a4756;
+      --text:#e9edf1;
+      --text-muted:#98a3b0;
+      --text-faint:#6d7885;
+      --accent:#dba84c;
+      --accent-strong:#f0c274;
+      --accent-tint:#3a2f16;
+      --good:#3fcc8f;
+      --good-tint:#123829;
+      --bad:#ef7863;
+      --bad-tint:#3a1f1a;
+      --chart-line:#7c93ec;
+      --chart-grid:#2a3441;
+      --gold:#d9a548;
+      --silver:#a9b2bd;
+      --bronze:#c98a5b;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 12px 28px -14px rgba(0,0,0,0.55);
+      --focus:#7c93ec;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#10141a;
+    --surface:#161c24;
+    --surface-2:#1d2530;
+    --surface-hover:#242e3b;
+    --border:#2a3441;
+    --border-strong:#3a4756;
+    --text:#e9edf1;
+    --text-muted:#98a3b0;
+    --text-faint:#6d7885;
+    --accent:#dba84c;
+    --accent-strong:#f0c274;
+    --accent-tint:#3a2f16;
+    --good:#3fcc8f;
+    --good-tint:#123829;
+    --bad:#ef7863;
+    --bad-tint:#3a1f1a;
+    --chart-line:#7c93ec;
+    --chart-grid:#2a3441;
+    --gold:#d9a548;
+    --silver:#a9b2bd;
+    --bronze:#c98a5b;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 12px 28px -14px rgba(0,0,0,0.55);
+    --focus:#7c93ec;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'IBM Plex Sans','IBM Plex Sans Hebrew',system-ui,sans-serif;
+    direction:ltr;
+    font-size:14px;
+    line-height:1.5;
+  }
+  .num, .mono{
+    font-family:'IBM Plex Mono', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  h1,h2,h3{
+    font-family:'Bricolage Grotesque','IBM Plex Sans',sans-serif;
+    text-wrap: balance;
+    margin:0;
+  }
+  .wrap{
+    max-width:1180px;
+    margin:0 auto;
+    padding:28px 24px 64px;
+  }
+
+  /* header */
+  .topbar{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:24px;
+    flex-wrap:wrap;
+    margin-bottom:22px;
+  }
+  .brand{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+  .brand-title{
+    font-size:28px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .brand-title .mark{
+    display:inline-grid;
+    place-items:center;
+    width:34px;height:34px;
+    border-radius:9px;
+    background:linear-gradient(155deg, var(--accent), var(--accent-strong));
+    color:#1b1204;
+    font-size:16px;
+  }
+  .brand-sub{
+    color:var(--text-muted);
+    font-size:13px;
+  }
+  .meta-line{
+    color:var(--text-faint);
+    font-size:12px;
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+  .meta-line b{ color:var(--text-muted); font-weight:600; }
+
+  /* tabs */
+  .tabs{
+    display:inline-flex;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:11px;
+    padding:4px;
+    gap:2px;
+  }
+  .tab-btn{
+    appearance:none;
+    border:none;
+    background:transparent;
+    color:var(--text-muted);
+    font:inherit;
+    font-weight:600;
+    font-size:13.5px;
+    padding:9px 18px;
+    border-radius:8px;
+    cursor:pointer;
+    transition: background .15s ease, color .15s ease;
+    font-family:'IBM Plex Sans','IBM Plex Sans Hebrew',sans-serif;
+  }
+  .tab-btn:hover{ color:var(--text); }
+  .tab-btn.active{
+    background:var(--surface);
+    color:var(--text);
+    box-shadow:var(--shadow);
+  }
+  .tab-btn:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible, tr:focus-visible{
+    outline:2px solid var(--focus);
+    outline-offset:1px;
+  }
+
+  .panel{ display:none; }
+  .panel.active{ display:block; }
+
+  /* platform filter */
+  .platform-filter{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:16px;
+  }
+  .plat-btn{
+    appearance:none;
+    border:1px solid var(--border-strong);
+    background:var(--surface);
+    color:var(--text-muted);
+    font:inherit;
+    font-family:'IBM Plex Sans','IBM Plex Sans Hebrew',sans-serif;
+    font-weight:600;
+    font-size:12.5px;
+    padding:7px 14px;
+    border-radius:20px;
+    cursor:pointer;
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .plat-btn:hover{ color:var(--text); border-color:var(--text-faint); }
+  .plat-btn.active{
+    background:var(--accent-tint);
+    color:var(--accent-strong);
+    border-color:var(--accent);
+  }
+
+  /* stat tiles */
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+    margin-bottom:20px;
+  }
+  .stat{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:16px 18px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    box-shadow:var(--shadow);
+  }
+  .stat-label{
+    font-size:11.5px;
+    color:var(--text-faint);
+    letter-spacing:.04em;
+    text-transform:uppercase;
+  }
+  .stat-value{
+    font-size:26px;
+    font-weight:700;
+    font-family:'Bricolage Grotesque',sans-serif;
+  }
+  .stat-value small{
+    font-size:13px;
+    color:var(--text-muted);
+    font-weight:500;
+    font-family:'IBM Plex Sans',sans-serif;
+    margin-left:4px;
+  }
+  .stat-split{ display:flex; align-items:baseline; gap:10px; }
+  .up{ color:var(--good); }
+  .down{ color:var(--bad); }
+
+  /* card */
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+    margin-bottom:20px;
+  }
+  .card-head{
+    padding:16px 20px;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .card-head h2{ font-size:16px; font-weight:700; }
+  .card-head .hint{ font-size:12px; color:var(--text-faint); }
+
+  /* table */
+  .table-scroll{ overflow-x:auto; }
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+  }
+  thead th{
+    position:sticky; top:0;
+    background:var(--surface-2);
+    color:var(--text-muted);
+    font-weight:600;
+    font-size:11.5px;
+    letter-spacing:.03em;
+    text-transform:uppercase;
+    text-align:left;
+    padding:10px 14px;
+    border-bottom:1px solid var(--border-strong);
+    white-space:nowrap;
+    cursor:default;
+  }
+  thead th.sortable{ cursor:pointer; user-select:none; }
+  thead th.sortable:hover{ color:var(--text); }
+  tbody td{
+    padding:9px 14px;
+    border-bottom:1px solid var(--border);
+    white-space:nowrap;
+    vertical-align:middle;
+  }
+  tbody tr{ cursor:default; }
+  tbody tr.clickable{ cursor:pointer; }
+  tbody tr.clickable:hover{ background:var(--surface-hover); }
+  tbody tr.selected{ background:var(--accent-tint); }
+  .lb-scroll tbody tr:last-child td{ border-bottom:none; }
+  .lb-body{ max-height:560px; overflow-y:auto; overflow-x:auto; }
+  .lb-body table{ width:100%; }
+
+  .rank-pill{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:30px;
+    height:22px;
+    padding:0 6px;
+    border-radius:6px;
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:600;
+    font-size:12.5px;
+    background:var(--surface-2);
+    color:var(--text);
+  }
+  .rank-pill.g1{ background:color-mix(in srgb, var(--gold) 24%, transparent); color:var(--accent-strong); }
+  .rank-pill.g2{ background:color-mix(in srgb, var(--silver) 22%, transparent); color:var(--text); }
+  .rank-pill.g3{ background:color-mix(in srgb, var(--bronze) 22%, transparent); color:var(--accent-strong); }
+  .medal{ font-size:12px; margin-left:3px; }
+
+  .app-cell{ display:flex; flex-direction:column; gap:1px; }
+  .app-name{ font-weight:600; color:var(--text); }
+  .app-sub{ font-size:11px; color:var(--text-faint); }
+
+  .badge{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    padding:2px 8px;
+    border-radius:20px;
+    font-size:11.5px;
+    font-weight:600;
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .badge.up{ background:var(--good-tint); color:var(--good); }
+  .badge.down{ background:var(--bad-tint); color:var(--bad); }
+  .badge.flat{ background:var(--surface-2); color:var(--text-faint); }
+  .badge.na{ background:var(--surface-2); color:var(--text-faint); }
+
+  .country-flag-code{
+    display:inline-flex; align-items:center; gap:6px;
+  }
+  .cc{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    font-weight:600;
+    color:var(--text-muted);
+    background:var(--surface-2);
+    border-radius:5px;
+    padding:1px 5px;
+  }
+  .cc.clickable{ cursor:pointer; border:1px solid transparent; }
+  .cc.clickable:hover{ background:var(--accent-tint); color:var(--accent-strong); border-color:var(--accent); }
+  .kw-count{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    font-weight:600;
+    color:var(--text);
+    background:var(--surface-2);
+    border-radius:5px;
+    padding:2px 7px;
+  }
+  .kw-count.clickable{ cursor:pointer; border:1px solid transparent; }
+  .kw-count.clickable:hover{ background:var(--accent-tint); color:var(--accent-strong); border-color:var(--accent); }
+
+  /* detail chart */
+  .detail-grid{
+    display:grid;
+    grid-template-columns: 1.3fr 0.7fr;
+    gap:16px;
+    padding:18px 20px 20px;
+  }
+  @media (max-width: 820px){ .detail-grid{ grid-template-columns:1fr; } }
+  .chart-title{ font-size:14px; font-weight:700; margin-bottom:2px; }
+  .chart-sub{ font-size:12px; color:var(--text-faint); margin-bottom:10px; }
+  .chart-box{ direction:ltr; }
+  .chart-box svg{ width:100%; height:auto; display:block; overflow:visible; }
+  .side-facts{ display:flex; flex-direction:column; gap:10px; }
+  .fact{
+    background:var(--surface-2);
+    border-radius:10px;
+    padding:10px 12px;
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    align-items:baseline;
+  }
+  .fact .k{ font-size:12px; color:var(--text-muted); }
+  .fact .v{ font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:13px; }
+
+  /* sparkline */
+  .spark{ display:block; direction:ltr; }
+
+  /* top tables (strong countries / strong keywords) */
+  .top-tables-grid{ display:grid; grid-template-columns:1fr 1fr; }
+  .top-tables-grid > div:first-child{ border-inline-end:1px solid var(--border); }
+  @media (max-width: 820px){
+    .top-tables-grid{ grid-template-columns:1fr; }
+    .top-tables-grid > div:first-child{ border-inline-end:none; border-bottom:1px solid var(--border); }
+  }
+  .top-table-title{ padding:14px 20px 2px; font-size:13px; font-weight:700; }
+  .top-table-sub{ padding:0 20px 10px; font-size:11.5px; color:var(--text-faint); }
+
+  /* filters */
+  .filters{
+    display:flex;
+    gap:10px;
+    padding:16px 20px;
+    flex-wrap:wrap;
+    align-items:flex-end;
+    border-bottom:1px solid var(--border);
+    background:var(--surface-2);
+  }
+  .field{ display:flex; flex-direction:column; gap:4px; min-width:130px; }
+  .field label{ font-size:11px; color:var(--text-muted); font-weight:600; }
+  .field.grow{ flex:1 1 180px; }
+  select, input[type="text"], input[type="number"]{
+    font:inherit;
+    font-family:'IBM Plex Sans','IBM Plex Sans Hebrew',sans-serif;
+    padding:7px 10px;
+    border-radius:8px;
+    border:1px solid var(--border-strong);
+    background:var(--surface);
+    color:var(--text);
+    width:100%;
+  }
+  .combobox{ position:relative; }
+  .combobox-list{
+    position:absolute;
+    top:calc(100% + 4px);
+    right:0; left:0;
+    margin:0; padding:5px;
+    list-style:none;
+    background:var(--surface);
+    border:1px solid var(--border-strong);
+    border-radius:9px;
+    box-shadow:var(--shadow);
+    max-height:230px;
+    overflow-y:auto;
+    z-index:30;
+  }
+  .combobox-list li{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:8px;
+    padding:7px 9px;
+    border-radius:6px;
+    font-size:12.5px;
+    cursor:pointer;
+  }
+  .combobox-list li:hover{ background:var(--surface-hover); }
+  .combobox-list li .hint{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    color:var(--text-faint);
+  }
+  .range-pair{ display:flex; gap:6px; }
+  .range-pair input{ width:64px; font-family:'IBM Plex Mono',monospace; }
+  .chk{ display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--text-muted); padding-bottom:7px; }
+  .chk input{ width:auto; }
+  .clear-btn{
+    appearance:none; border:1px solid var(--border-strong); background:var(--surface);
+    color:var(--text-muted); border-radius:8px; padding:7px 14px; font:inherit; font-weight:600;
+    cursor:pointer; font-size:12.5px;
+  }
+  .clear-btn:hover{ color:var(--text); border-color:var(--text-faint); }
+  .results-count{ font-size:12px; color:var(--text-faint); padding:12px 20px 0; }
+
+
+  footer{
+    margin-top:8px;
+    color:var(--text-faint);
+    font-size:11.5px;
+    text-align:center;
+  }
+
+  ::-webkit-scrollbar{ width:10px; height:10px; }
+  ::-webkit-scrollbar-thumb{ background:var(--border-strong); border-radius:6px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+
+  @media (max-width: 760px){
+    .stats{ grid-template-columns:repeat(2,1fr); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ transition:none !important; }
+  }
+
+[hidden]{display:none!important}
+.login-gate{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg)}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:32px;max-width:380px;width:100%;box-shadow:var(--shadow);box-sizing:border-box}
+.login-card h1{font-size:22px;margin:0 0 8px;color:var(--text);font-family:'Bricolage Grotesque','IBM Plex Sans',sans-serif}
+.login-card p{color:var(--text-muted);font-size:14px;margin:0 0 18px}
+.login-card input[type=password]{width:100%;border:1px solid var(--border);border-radius:8px;padding:11px 14px;font-size:15px;box-sizing:border-box;background:var(--surface);color:var(--text)}
+.login-card button.primary{width:100%;margin-top:12px;background:var(--text);color:var(--surface);border:0;border-radius:8px;padding:11px 14px;font-size:14px;font-weight:600;cursor:pointer}
+.login-card .error{color:var(--bad);margin-top:10px;font-size:13px;min-height:18px}
+.kt-topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:24px 3% 0;max-width:1400px;margin:auto;box-sizing:border-box}
+.kt-topbar h1{font-size:28px;margin:0;color:var(--text);font-family:'Bricolage Grotesque','IBM Plex Sans',sans-serif}
+.kt-logout{background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;cursor:pointer}
+.kt-nav{display:flex;gap:10px;flex-wrap:wrap;padding:18px 3% 20px;max-width:1400px;margin:auto;box-sizing:border-box}
+.kt-nav a{color:var(--text);text-decoration:none;font-size:14px;padding:9px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface);cursor:pointer}
+.kt-nav a:hover{border-color:var(--border-strong)}
+.kt-nav a.active{background:var(--text);color:var(--surface);border-color:var(--text)}
+@media(max-width:650px){.kt-topbar{padding:16px 16px 0}.kt-nav{padding:12px 16px 16px}.kt-topbar h1{font-size:22px}}
+</style>
+</head>
+<body>
+<section id="loginView">
+  <div class="login-gate">
+    <div class="login-card">
+      <h1>Dashboard Login</h1>
+      <p>Enter the password to view this report.</p>
+      <form id="loginForm">
+        <input id="password" type="password" autocomplete="current-password" placeholder="Password" required>
+        <button class="primary" type="submit">Login</button>
+        <div id="loginError" class="error"></div>
+      </form>
+    </div>
+  </div>
+</section>
+<div id="appView" hidden>
+<div class="kt-topbar">
+  <div><h1>Ranking</h1></div>
+  <button id="refreshBtn" class="kt-logout" type="button">↻ Refresh</button>
+  <button id="logoutBtn" class="kt-logout" type="button">Logout</button>
+</div>
+<div class="kt-nav">
+  <a href="keitaro-mbm.html">General Dashboard</a>
+  <a href="keitaro-groups-mbm.html">By Group</a>
+  <a href="ltv.html">LTV Report</a>
+  <a href="ranking.html" class="active">Ranking</a>
+  <a href="commission.html">Commission</a>
+  <a href="commission_worker.html">Commission Worker</a>
+    <a href="operations.html">Operations Report</a>
+<a href="operations-september.html">Operations September</a>
+  <a href="ftd.html">FTD</a>
+  <a href="offer-mbm.html">Offer</a>
+  <a href="chat-mbm.html">Chat</a>
+  <a href="domain.html">Domains</a>
+  <a href="domain_traffic.html">Traffic</a>
+  <a href="keitaro_domains.html">Domains (DB)</a>
+    <a href="onesignal.html">OneSignal</a>
+    <a href="zone.html">Zones</a>
+    <a href="keitaro_amz_group.html">Keitaro Groups</a>
+    <a href="namecheap.html">Namecheap</a>
+</div>
+
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-title"><span class="mark">🏆</span>Rank Radar</div>
+      <div class="brand-sub">Search ranking (ASO) tracking for your apps across stores — by country, platform, and keyword</div>
+      <div class="meta-line" id="metaLine"></div>
+    </div>
+    <div class="tabs" role="tablist">
+      <button class="tab-btn" id="tabBtnLeaders" data-tab="leaders">Leaders &amp; Trends</button>
+      <button class="tab-btn active" id="tabBtnSearch" data-tab="search">Search &amp; Filter</button>
+    </div>
+  </div>
+
+  <!-- LEADERS PANEL -->
+  <div class="panel" id="panel-leaders">
+    <div class="platform-filter" id="platformFilter"></div>
+    <div class="stats" id="statsRow"></div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>Leaderboard</h2>
+        <div class="hint" id="leaderboardHint">Sorted by the best rank measured in any country · click a row to see the full trend</div>
+      </div>
+      <div class="lb-body">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:34px">#</th>
+              <th style="min-width:170px">App</th>
+              <th>Best Rank</th>
+              <th>Country / Store</th>
+              <th>Avg. Rank</th>
+              <th>Countries in Top</th>
+              <th style="width:90px">30-Day Trend</th>
+              <th style="width:80px">Weekly Change</th>
+            </tr>
+          </thead>
+          <tbody id="leaderBody"></tbody>
+        </table>
+      </div>
+      <div class="detail-grid" id="detailGrid"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>Strong Countries &amp; Keywords</h2>
+        <div class="hint" id="topTablesHint">Based on each app's most recent scan</div>
+      </div>
+      <div class="top-tables-grid">
+        <div>
+          <div class="top-table-title">Strong Countries</div>
+          <div class="top-table-sub">Sorted by average rank · click a row to jump to filtered search</div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Country</th>
+                  <th>Avg. Rank</th>
+                  <th>Best Rank</th>
+                  <th>Apps</th>
+                </tr>
+              </thead>
+              <tbody id="topCountriesBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <div class="top-table-title">Strong Keywords</div>
+          <div class="top-table-sub">Keywords with the best average ranking · click a row to jump to filtered search</div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Keyword</th>
+                  <th>Avg. Rank</th>
+                  <th>Best Rank</th>
+                  <th>Apps</th>
+                </tr>
+              </thead>
+              <tbody id="topKeywordsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEARCH PANEL -->
+  <div class="panel active" id="panel-search">
+    <div class="card">
+      <div class="card-head">
+        <h2>Search &amp; Filter Results</h2>
+        <div class="hint">Every raw ranking check — filter by app, country, platform, or rank range</div>
+      </div>
+      <div class="filters">
+        <div class="field grow combobox">
+          <label for="fAppInput">App</label>
+          <input type="text" id="fAppInput" placeholder="Start typing an app name..." autocomplete="off">
+          <ul class="combobox-list" id="fAppListEl" hidden></ul>
+        </div>
+        <div class="field grow combobox">
+          <label for="fCountryInput">Country</label>
+          <input type="text" id="fCountryInput" placeholder="Start typing a country name..." autocomplete="off">
+          <ul class="combobox-list" id="fCountryListEl" hidden></ul>
+        </div>
+        <div class="field combobox">
+          <label for="fPlatformInput">Platform</label>
+          <input type="text" id="fPlatformInput" placeholder="Start typing a platform..." autocomplete="off">
+          <ul class="combobox-list" id="fPlatformListEl" hidden></ul>
+        </div>
+        <div class="field combobox">
+          <label for="fKeyword">Keyword</label>
+          <input type="text" id="fKeyword" placeholder="e.g. 1xbet" autocomplete="off">
+          <ul class="combobox-list" id="fKeywordListEl" hidden></ul>
+        </div>
+        <div class="field">
+          <label>Rank range</label>
+          <div class="range-pair">
+            <input type="number" id="fRankMin" placeholder="From" min="1">
+            <input type="number" id="fRankMax" placeholder="To" min="1">
+          </div>
+        </div>
+        <button class="clear-btn" id="clearFilters">Clear filters</button>
+      </div>
+      <div class="results-count" id="resultsCount"></div>
+      <div class="table-scroll" style="max-height:560px; overflow-y:auto; margin-top:10px;">
+        <table>
+          <thead>
+            <tr>
+              <th>id</th>
+              <th class="sortable" data-sort="app">App</th>
+              <th class="sortable" data-sort="keywordCount">Keywords</th>
+              <th class="sortable" data-sort="countryCount">Countries</th>
+              <th class="sortable" data-sort="totalCount">Total Rank</th>
+              <th class="sortable" data-sort="keyword">Keyword</th>
+              <th class="sortable" data-sort="country">Country</th>
+              <th class="sortable" data-sort="platform">Platform</th>
+              <th class="sortable" data-sort="rank">Rank</th>
+              <th class="sortable" data-sort="checkDate">Last Checked</th>
+            </tr>
+          </thead>
+          <tbody id="searchBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <footer id="footerNote">Loading data…</footer>
+</div>
+
+</div>
+<script>
+const PLATFORM_LABELS = {
+  'ios':'iOS App Store',
+  'android':'Google Play',
+  'alter_android':'Android (Alt Store)',
+  'samsung':'Samsung Galaxy Store',
+  'rt-android':'Android (RT)',
+  'uv-android':'Android (UV)',
+};
+function platformLabel(p){ return PLATFORM_LABELS[p] || p; }
+
+function countryFlag(code){
+  if(!code || code.length !== 2) return '';
+  const base = 'A'.charCodeAt(0);
+  const A = 0x1F1E6;
+  let flag = '';
+  for(const ch of code.toUpperCase()){
+    const idx = ch.charCodeAt(0) - base;
+    if(idx < 0 || idx > 25) return '';
+    flag += String.fromCodePoint(A + idx);
+  }
+  return flag;
+}
+
+let DATA = null;
+let selectedAppId = null;
+let searchSort = { key:'rank', dir:'asc' };
+let COUNTRY_NAME_BY_CODE = {};
+let ALL_KEYWORDS = [];
+let APP_KEYWORD_COUNT = new Map();
+let APP_COUNTRY_COUNT = new Map();
+let APP_TOTAL_COUNT = new Map();
+let currentPlatform = null;
+let currentLeaderboard = [];
+let currentDailyRows = [];
+let currentLatestRows = [];
+
+function fmtDate(iso){
+  if(!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-GB', { day:'2-digit', month:'2-digit', year:'numeric' });
+}
+function fmtDateShort(ymd){
+  const [y,m,d] = ymd.split('-');
+  return `${d}/${m}`;
+}
+
+const CACHE_PREFIX = 'keitaro_cache_';
+function todayKey(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function getCached(key){
+  try{
+    const raw = localStorage.getItem(CACHE_PREFIX + key);
+    if(!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed.day === todayKey() ? parsed.data : null;
+  }catch{ return null; }
+}
+function purgeStaleCache(){
+  const today = todayKey();
+  for(let i = localStorage.length - 1; i >= 0; i--){
+    const k = localStorage.key(i);
+    if(!k || !k.startsWith(CACHE_PREFIX)) continue;
+    try{
+      if(JSON.parse(localStorage.getItem(k)).day !== today) localStorage.removeItem(k);
+    }catch{ localStorage.removeItem(k); }
+  }
+}
+function setCached(key, data){
+  try{
+    localStorage.setItem(CACHE_PREFIX + key, JSON.stringify({ day: todayKey(), data }));
+    purgeStaleCache();
+  }catch{}
+}
+
+// The ranking checks only run once a day, so cache the live query for the rest of the
+// calendar day instead of re-hitting the database on every page load/refresh.
+async function loadData(){
+  try{
+    const token = localStorage.getItem('keitaro_dashboard_token');
+    if(!token) return;
+    const cacheKey = '/api/ranking';
+    const cached = getCached(cacheKey);
+    if(cached){
+      DATA = cached;
+    } else {
+      const res = await fetch('/api/ranking', { headers: { 'x-api-token': token } });
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      DATA = await res.json();
+      setCached(cacheKey, DATA);
+    }
+    // This dashboard only cares about keywords the app actually ranks for; drop everything else.
+    DATA.latest = DATA.latest.filter(r => r.found && r.rank != null);
+  }catch(e){
+    document.getElementById('footerNote').textContent = 'Error loading data: ' + e.message;
+    return;
+  }
+  document.getElementById('footerNote').textContent =
+    `Live from mb_cms_db · updated ${fmtDate(DATA.generatedAt)}`;
+
+  const meta = document.getElementById('metaLine');
+  meta.innerHTML = `
+    <span><b>${DATA.apps.length}</b> apps</span>
+    <span>Data from ${fmtDate(DATA.dateRange.min)} to ${fmtDate(DATA.dateRange.max)}</span>
+    <span>Updated ${fmtDate(DATA.generatedAt)}</span>
+  `;
+
+  COUNTRY_NAME_BY_CODE = {};
+  DATA.countries.forEach(c => { COUNTRY_NAME_BY_CODE[c.code] = c.name; });
+  ALL_KEYWORDS = Array.from(new Set(DATA.latest.map(r => r.keyword).filter(Boolean))).sort((a,b) => a.localeCompare(b));
+
+  APP_KEYWORD_COUNT = new Map();
+  APP_COUNTRY_COUNT = new Map();
+  APP_TOTAL_COUNT = new Map();
+  DATA.latest.forEach(r => {
+    if(r.keyword){
+      if(!APP_KEYWORD_COUNT.has(r.appId)) APP_KEYWORD_COUNT.set(r.appId, new Set());
+      APP_KEYWORD_COUNT.get(r.appId).add(r.keyword);
+    }
+    if(r.country){
+      if(!APP_COUNTRY_COUNT.has(r.appId)) APP_COUNTRY_COUNT.set(r.appId, new Set());
+      APP_COUNTRY_COUNT.get(r.appId).add(r.country);
+    }
+    APP_TOTAL_COUNT.set(r.appId, (APP_TOTAL_COUNT.get(r.appId) || 0) + 1);
+  });
+
+  renderPlatformFilter();
+  renderLeadersView();
+  renderSearch();
+}
+
+function bindEvents(){
+  document.getElementById('tabBtnLeaders').addEventListener('click', () => switchTab('leaders'));
+  document.getElementById('tabBtnSearch').addEventListener('click', () => switchTab('search'));
+
+  setupCombobox(
+    document.getElementById('fAppInput'),
+    document.getElementById('fAppListEl'),
+    q => DATA.apps.filter(a => a.name.toLowerCase().includes(q)).sort((a,b) => a.name.localeCompare(b.name)).slice(0,8).map(a => ({ label: a.name, value: a.name })),
+    (m) => { document.getElementById('fAppInput').value = m.value; renderSearch(); }
+  );
+  setupCombobox(
+    document.getElementById('fCountryInput'),
+    document.getElementById('fCountryListEl'),
+    q => DATA.countries.filter(c => c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q)).slice(0,8).map(c => ({ label: `${countryFlag(c.code)} ${c.name}`, hint: c.code, value: c.name })),
+    (m) => { document.getElementById('fCountryInput').value = m.value; renderSearch(); }
+  );
+  setupCombobox(
+    document.getElementById('fPlatformInput'),
+    document.getElementById('fPlatformListEl'),
+    q => DATA.platforms.filter(p => platformLabel(p).toLowerCase().includes(q)).slice(0,8).map(p => ({ label: platformLabel(p), value: platformLabel(p) })),
+    (m) => { document.getElementById('fPlatformInput').value = m.value; renderSearch(); }
+  );
+  setupCombobox(
+    document.getElementById('fKeyword'),
+    document.getElementById('fKeywordListEl'),
+    q => ALL_KEYWORDS.filter(k => k.toLowerCase().includes(q)).slice(0,8).map(k => ({ label: k, value: k })),
+    (m) => { document.getElementById('fKeyword').value = m.value; renderSearch(); }
+  );
+
+  document.getElementById('fRankMin').addEventListener('input', renderSearch);
+  document.getElementById('fRankMax').addEventListener('input', renderSearch);
+  document.getElementById('clearFilters').addEventListener('click', () => {
+    document.getElementById('fAppInput').value='';
+    document.getElementById('fCountryInput').value='';
+    document.getElementById('fPlatformInput').value='';
+    document.getElementById('fKeyword').value='';
+    document.getElementById('fRankMin').value='';
+    document.getElementById('fRankMax').value='';
+    renderSearch();
+  });
+  document.querySelectorAll('th.sortable').forEach(th => {
+    th.addEventListener('click', () => {
+      const key = th.dataset.sort;
+      if(searchSort.key === key){ searchSort.dir = searchSort.dir === 'asc' ? 'desc' : 'asc'; }
+      else { searchSort = { key, dir: 'asc' }; }
+      renderSearch();
+    });
+  });
+
+  document.getElementById('searchBody').addEventListener('click', (e) => {
+    const cc = e.target.closest('.cc.clickable');
+    if(cc){ selectCountryFilter(cc.dataset.code); return; }
+    const kw = e.target.closest('.kw-count.clickable');
+    if(kw) selectAppFilter(Number(kw.dataset.app));
+  });
+  document.getElementById('detailGrid').addEventListener('click', (e) => {
+    const el = e.target.closest('.cc.clickable');
+    if(el) selectCountryFilter(el.dataset.code);
+  });
+}
+
+function setupCombobox(inputEl, listEl, getMatches, onPick){
+  function close(){ listEl.hidden = true; listEl.innerHTML=''; }
+  function open(matches){
+    if(!matches.length){ close(); return; }
+    listEl.innerHTML = matches.map((m,i) => `<li data-idx="${i}">${escapeHtml(m.label)}${m.hint?`<span class="hint">${escapeHtml(m.hint)}</span>`:''}</li>`).join('');
+    listEl.hidden = false;
+    Array.from(listEl.children).forEach((li,i) => {
+      li.addEventListener('mousedown', (e) => { e.preventDefault(); onPick(matches[i]); close(); });
+    });
+  }
+  inputEl.addEventListener('input', () => {
+    const q = inputEl.value.trim().toLowerCase();
+    open(getMatches(q));
+    renderSearch();
+  });
+  inputEl.addEventListener('focus', () => {
+    const q = inputEl.value.trim().toLowerCase();
+    open(getMatches(q));
+  });
+  inputEl.addEventListener('blur', () => setTimeout(close, 120));
+  inputEl.addEventListener('keydown', (e) => { if(e.key === 'Escape') close(); });
+}
+
+function selectCountryFilter(code){
+  if(!code) return;
+  switchTab('search');
+  document.getElementById('fCountryInput').value = COUNTRY_NAME_BY_CODE[code] || code;
+  renderSearch();
+}
+
+function selectAppFilter(appId){
+  const app = DATA.apps.find(a => a.id === appId);
+  if(!app) return;
+  switchTab('search');
+  document.getElementById('fAppInput').value = app.name;
+  document.getElementById('fCountryInput').value = '';
+  document.getElementById('fPlatformInput').value = '';
+  document.getElementById('fKeyword').value = '';
+  renderSearch();
+}
+
+function switchTab(name){
+  document.getElementById('tabBtnLeaders').classList.toggle('active', name==='leaders');
+  document.getElementById('tabBtnSearch').classList.toggle('active', name==='search');
+  document.getElementById('panel-leaders').classList.toggle('active', name==='leaders');
+  document.getElementById('panel-search').classList.toggle('active', name==='search');
+}
+
+function renderPlatformFilter(){
+  const el = document.getElementById('platformFilter');
+  const buttons = [{ key:null, label:'All platforms' }, ...DATA.platforms.map(p => ({ key:p, label: platformLabel(p) }))];
+  el.innerHTML = buttons.map(b => `<button type="button" class="plat-btn ${currentPlatform===b.key?'active':''}">${escapeHtml(b.label)}</button>`).join('');
+  Array.from(el.children).forEach((btn, i) => {
+    btn.addEventListener('click', () => {
+      currentPlatform = buttons[i].key;
+      renderPlatformFilter();
+      renderLeadersView();
+    });
+  });
+}
+
+function ymdShift(dateStr, deltaDays){
+  const d = new Date(dateStr + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() + deltaDays);
+  return d.toISOString().slice(0,10);
+}
+
+function getFilteredLatest(){
+  return currentPlatform ? DATA.latest.filter(r => r.platform === currentPlatform) : DATA.latest;
+}
+function getFilteredDaily(){
+  return currentPlatform ? DATA.dailyTrendByPlatform.filter(d => d.platform === currentPlatform) : DATA.dailyTrend;
+}
+
+function buildLeaderboard(latestRows, dailyRows){
+  const byApp = new Map();
+  latestRows.forEach(r => { if(!byApp.has(r.appId)) byApp.set(r.appId, []); byApp.get(r.appId).push(r); });
+
+  const dailyByApp = new Map();
+  dailyRows.forEach(d => { if(!dailyByApp.has(d.appId)) dailyByApp.set(d.appId, []); dailyByApp.get(d.appId).push(d); });
+
+  const lastDate = DATA.dateRange.max;
+  const windowStart1 = ymdShift(lastDate, -6);
+  const windowStart2 = ymdShift(lastDate, -13);
+  const windowEnd2 = ymdShift(lastDate, -7);
+
+  const appInfoById = new Map(DATA.apps.map(a => [a.id, a]));
+  const result = [];
+  for(const [appId, rowsForApp] of byApp.entries()){
+    const found = rowsForApp.filter(r => r.found && r.rank != null);
+    const bestRank = found.length ? Math.min(...found.map(r => r.rank)) : null;
+    const avgRank = found.length ? Math.round((found.reduce((s,r) => s+r.rank, 0)/found.length)*10)/10 : null;
+    const countriesFound = new Set(found.map(r => r.country)).size;
+    const bestRow = found.find(r => r.rank === bestRank);
+
+    const days = dailyByApp.get(appId) || [];
+    const win1 = days.filter(d => d.date >= windowStart1 && d.date <= lastDate && d.avgRank != null);
+    const win2 = days.filter(d => d.date >= windowStart2 && d.date <= windowEnd2 && d.avgRank != null);
+    const avg1 = win1.length ? win1.reduce((s,d) => s+d.avgRank, 0)/win1.length : null;
+    const avg2 = win2.length ? win2.reduce((s,d) => s+d.avgRank, 0)/win2.length : null;
+    const delta = (avg1 != null && avg2 != null) ? Math.round((avg2-avg1)*10)/10 : null;
+
+    const info = appInfoById.get(appId) || {};
+    result.push({
+      appId, name: info.name || `App ${appId}`, storeTitle: info.storeTitle, developer: info.developer, liveStatus: info.liveStatus,
+      bestRank, avgRank, countriesFound,
+      bestCountry: bestRow ? bestRow.country : null,
+      bestPlatform: bestRow ? bestRow.platform : null,
+      trendDelta7d: delta,
+    });
+  }
+  result.sort((a,b) => {
+    if(a.bestRank == null) return 1;
+    if(b.bestRank == null) return -1;
+    return a.bestRank - b.bestRank;
+  });
+  return result;
+}
+
+function aggregateLatest(rows, keyFn, labelFn){
+  const map = new Map();
+  rows.forEach(r => {
+    if(!r.found || r.rank == null) return;
+    const key = keyFn(r);
+    if(key == null || key === '') return;
+    if(!map.has(key)) map.set(key, { key, label: labelFn(r), ranks: [], apps: new Set() });
+    const g = map.get(key);
+    g.ranks.push(r.rank);
+    g.apps.add(r.appId);
+  });
+  return Array.from(map.values()).map(g => ({
+    key: g.key,
+    label: g.label,
+    avgRank: Math.round((g.ranks.reduce((a,b) => a+b, 0)/g.ranks.length)*10)/10,
+    bestRank: Math.min(...g.ranks),
+    appsCount: g.apps.size,
+  })).sort((a,b) => a.avgRank - b.avgRank);
+}
+
+function renderTopTables(latestRows){
+  const countries = aggregateLatest(latestRows, r => r.country, r => COUNTRY_NAME_BY_CODE[r.country] || r.country).slice(0, 12);
+  const keywords = aggregateLatest(latestRows, r => r.keyword, r => r.keyword).slice(0, 12);
+
+  const noDataRow = `<tr><td colspan="4" style="text-align:center; color:var(--text-faint); padding:14px;">No data for the current filter</td></tr>`;
+
+  const cBody = document.getElementById('topCountriesBody');
+  cBody.innerHTML = countries.length ? countries.map(c => `
+    <tr class="clickable">
+      <td>${countryFlag(c.key)} <span class="cc">${c.key}</span> ${escapeHtml(c.label)}</td>
+      <td class="num">${c.avgRank}</td>
+      <td class="num">${c.bestRank}</td>
+      <td class="num">${c.appsCount}</td>
+    </tr>
+  `).join('') : noDataRow;
+  Array.from(cBody.querySelectorAll('tr.clickable')).forEach((tr, i) => {
+    tr.addEventListener('click', () => selectCountryFilter(countries[i].key));
+  });
+
+  const kBody = document.getElementById('topKeywordsBody');
+  kBody.innerHTML = keywords.length ? keywords.map(k => `
+    <tr class="clickable">
+      <td>${escapeHtml(k.label)}</td>
+      <td class="num">${k.avgRank}</td>
+      <td class="num">${k.bestRank}</td>
+      <td class="num">${k.appsCount}</td>
+    </tr>
+  `).join('') : noDataRow;
+  Array.from(kBody.querySelectorAll('tr.clickable')).forEach((tr, i) => {
+    tr.addEventListener('click', () => selectKeywordFilter(keywords[i].key));
+  });
+}
+
+function selectKeywordFilter(keyword){
+  if(!keyword) return;
+  switchTab('search');
+  document.getElementById('fKeyword').value = keyword;
+  renderSearch();
+}
+
+function renderLeadersView(){
+  currentLatestRows = getFilteredLatest();
+  currentDailyRows = getFilteredDaily();
+  currentLeaderboard = buildLeaderboard(currentLatestRows, currentDailyRows);
+
+  if(!currentLeaderboard.some(a => a.appId === selectedAppId)){
+    selectedAppId = currentLeaderboard.length ? currentLeaderboard[0].appId : null;
+  }
+
+  const label = currentPlatform ? platformLabel(currentPlatform) : 'All platforms';
+  document.getElementById('leaderboardHint').textContent =
+    `Sorted by the best rank measured in any country · click a row to see the full trend · Showing: ${label}`;
+  document.getElementById('topTablesHint').textContent =
+    `Based on each app's most recent scan · Showing: ${label}`;
+
+  renderStats(currentLeaderboard, currentLatestRows);
+  renderLeaderboardTable(currentLeaderboard, currentDailyRows);
+  renderDetail(currentLeaderboard, currentDailyRows);
+  renderTopTables(currentLatestRows);
+}
+
+function renderStats(leaderboard, latestRows){
+  const withDelta = leaderboard.filter(a => a.trendDelta7d != null);
+  const improved = withDelta.filter(a => a.trendDelta7d > 0.05).length;
+  const declined = withDelta.filter(a => a.trendDelta7d < -0.05).length;
+  const countriesCount = new Set(latestRows.map(r => r.country).filter(Boolean)).size;
+
+  const stats = [
+    { label:'Apps tracked', value: leaderboard.length },
+    { label:'Countries covered', value: countriesCount },
+    { label:'Store platforms', value: currentPlatform ? 1 : DATA.platforms.length },
+    { label:'Last 7 days trend', split:[
+        { v: improved, cls:'up', suf:'up' },
+        { v: declined, cls:'down', suf:'down' },
+      ]},
+  ];
+  const row = document.getElementById('statsRow');
+  row.innerHTML = stats.map(s => {
+    if(s.split){
+      return `<div class="stat">
+        <div class="stat-label">${s.label}</div>
+        <div class="stat-split">
+          <div class="stat-value ${s.split[0].cls}">${s.split[0].v}<small>${s.split[0].suf}</small></div>
+          <div class="stat-value ${s.split[1].cls}">${s.split[1].v}<small>${s.split[1].suf}</small></div>
+        </div>
+      </div>`;
+    }
+    return `<div class="stat">
+      <div class="stat-label">${s.label}</div>
+      <div class="stat-value">${s.value}</div>
+    </div>`;
+  }).join('');
+}
+
+function rankPillClass(i){
+  if(i===0) return 'g1'; if(i===1) return 'g2'; if(i===2) return 'g3'; return '';
+}
+function medalFor(i){
+  if(i===0) return '🥇'; if(i===1) return '🥈'; if(i===2) return '🥉'; return '';
+}
+
+function buildSparkPath(points, w, h, pad){
+  const vals = points.map(p => p.v).filter(v => v != null);
+  if(vals.length < 2) return null;
+  let min = Math.min(...vals), max = Math.max(...vals);
+  if(min === max){ min -= 1; max += 1; }
+  const innerW = w - pad*2, innerH = h - pad*2;
+  const n = points.length;
+  let path = '', started = false;
+  const coords = [];
+  points.forEach((p, i) => {
+    const x = pad + (n === 1 ? 0 : (i/(n-1)) * innerW);
+    if(p.v == null){ started = false; return; }
+    const y = pad + (1 - (p.v - min)/(max-min)) * innerH;
+    coords.push([x,y,i]);
+    path += (started ? ' L ' : ' M ') + x.toFixed(1) + ' ' + y.toFixed(1);
+    started = true;
+  });
+  const last = coords[coords.length-1];
+  return { path, lastX:last[0], lastY:last[1], min, max };
+}
+
+function sparklineSVG(appId, dailyRows){
+  const days = dailyRows.filter(d => d.appId === appId).slice(-30);
+  const points = days.map(d => ({ v: d.avgRank }));
+  const w=88, h=28, pad=3;
+  const built = buildSparkPath(points, w, h, pad);
+  if(!built) return `<span style="color:var(--text-faint); font-size:11px;">No trend</span>`;
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}">
+    <path d="${built.path}" fill="none" stroke="var(--chart-line)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="${built.lastX}" cy="${built.lastY}" r="2.2" fill="var(--chart-line)"/>
+  </svg>`;
+}
+
+function trendBadge(delta){
+  if(delta == null) return `<span class="badge na">No data</span>`;
+  if(delta > 0.05) return `<span class="badge up">▲ ${delta.toFixed(1)}</span>`;
+  if(delta < -0.05) return `<span class="badge down">▼ ${Math.abs(delta).toFixed(1)}</span>`;
+  return `<span class="badge flat">Flat</span>`;
+}
+
+function renderLeaderboardTable(leaderboard, dailyRows){
+  const body = document.getElementById('leaderBody');
+  if(!leaderboard.length){
+    body.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-faint); padding:20px;">No apps match the current filter</td></tr>`;
+    return;
+  }
+  body.innerHTML = leaderboard.map((a, i) => {
+    const rankHtml = a.bestRank != null
+      ? `<span class="rank-pill ${rankPillClass(i)}">${medalFor(i)}${a.bestRank}</span>`
+      : `<span class="rank-pill">—</span>`;
+    const loc = a.bestCountry ? `<span class="country-flag-code">${countryFlag(a.bestCountry)} <span class="cc clickable" data-code="${a.bestCountry}" title="${escapeHtml(COUNTRY_NAME_BY_CODE[a.bestCountry] || '')}">${a.bestCountry}</span> ${platformLabel(a.bestPlatform)}</span>` : '—';
+    return `<tr class="clickable ${a.appId===selectedAppId?'selected':''}" data-app="${a.appId}">
+      <td class="num">${i+1}</td>
+      <td>
+        <div class="app-cell">
+          <span class="app-name">${escapeHtml(a.name)}</span>
+          ${a.developer ? `<span class="app-sub">${escapeHtml(a.developer)}</span>` : ''}
+        </div>
+      </td>
+      <td>${rankHtml}</td>
+      <td>${loc}</td>
+      <td class="num">${a.avgRank != null ? a.avgRank : '—'}</td>
+      <td class="num">${a.countriesFound}</td>
+      <td>${sparklineSVG(a.appId, dailyRows)}</td>
+      <td>${trendBadge(a.trendDelta7d)}</td>
+    </tr>`;
+  }).join('');
+
+  body.querySelectorAll('tr[data-app]').forEach(tr => {
+    tr.addEventListener('click', (e) => {
+      const badge = e.target.closest('.cc.clickable');
+      if(badge){ selectCountryFilter(badge.dataset.code); return; }
+      selectedAppId = Number(tr.dataset.app);
+      renderLeaderboardTable(currentLeaderboard, currentDailyRows);
+      renderDetail(currentLeaderboard, currentDailyRows);
+    });
+  });
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderDetail(leaderboard, dailyRows){
+  const grid = document.getElementById('detailGrid');
+  const app = leaderboard.find(a => a.appId === selectedAppId);
+  const appInfo = DATA.apps.find(a => a.id === selectedAppId);
+  if(!app){ grid.innerHTML = '<div style="padding:10px 4px; color:var(--text-faint); font-size:13px;">No apps to show for the current filter</div>'; return; }
+
+  const days = dailyRows.filter(d => d.appId === selectedAppId);
+  const w = 640, h = 220, padL = 40, padR = 16, padT = 16, padB = 28;
+  const innerW = w - padL - padR, innerH = h - padT - padB;
+
+  const withVals = days.filter(d => d.avgRank != null);
+  let chartSVG;
+  if(withVals.length < 2){
+    chartSVG = `<div style="color:var(--text-faint); font-size:13px; padding:40px 0; text-align:center;">Not enough historical data for a trend chart for this app</div>`;
+  }else{
+    let minV = Math.min(...withVals.map(d=>d.avgRank));
+    let maxV = Math.max(...withVals.map(d=>d.avgRank));
+    if(minV === maxV){ minV -=1; maxV += 1; }
+    const pad = (maxV-minV) * 0.1 || 1;
+    minV = Math.max(1, minV - pad); maxV = maxV + pad;
+    const n = days.length;
+    const xFor = i => padL + (n===1?0:(i/(n-1))*innerW);
+    const yFor = v => padT + (1 - (v-minV)/(maxV-minV)) * innerH;
+
+    let path='', started=false;
+    let areaPath='';
+    days.forEach((d,i) => {
+      if(d.avgRank == null){ started=false; return; }
+      const x=xFor(i), y=yFor(d.avgRank);
+      path += (started?' L ':' M ') + x.toFixed(1) + ' ' + y.toFixed(1);
+      started = true;
+    });
+
+    const gridLines = [0,0.5,1].map(f => {
+      const y = padT + f*innerH;
+      const val = Math.round(maxV - f*(maxV-minV));
+      return `<line x1="${padL}" y1="${y}" x2="${w-padR}" y2="${y}" stroke="var(--chart-grid)" stroke-width="1"/>
+              <text x="${padL-8}" y="${y+3}" text-anchor="end" font-size="10" fill="var(--text-faint)" font-family="IBM Plex Mono, monospace">#${val}</text>`;
+    }).join('');
+
+    const tickCount = Math.min(5, n);
+    const dateTicks = [];
+    for(let t=0;t<tickCount;t++){
+      const idx = tickCount===1?0:Math.round(t*(n-1)/(tickCount-1));
+      dateTicks.push(idx);
+    }
+    const dateLabels = dateTicks.map(idx => {
+      const x = xFor(idx);
+      return `<text x="${x}" y="${h-8}" text-anchor="middle" font-size="10" fill="var(--text-faint)" font-family="IBM Plex Mono, monospace">${fmtDateShort(days[idx].date)}</text>`;
+    }).join('');
+
+    const last = withVals[withVals.length-1];
+    const lastIdx = days.indexOf(last);
+    const lx = xFor(lastIdx), ly = yFor(last.avgRank);
+
+    chartSVG = `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}">
+      ${gridLines}
+      <path d="${path}" fill="none" stroke="var(--chart-line)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="${lx}" cy="${ly}" r="3.5" fill="var(--chart-line)"/>
+      <text x="${lx}" y="${ly-10}" text-anchor="middle" font-size="11" font-weight="600" fill="var(--chart-line)" font-family="IBM Plex Mono, monospace">#${last.avgRank}</text>
+      ${dateLabels}
+    </svg>`;
+  }
+
+  grid.innerHTML = `
+    <div>
+      <div class="chart-title">Average rank trend — ${escapeHtml(app.name)}</div>
+      <div class="chart-sub">Daily average rank across all countries/platforms where the app was found (lower rank = better)</div>
+      <div class="chart-box">${chartSVG}</div>
+    </div>
+    <div class="side-facts">
+      <div class="fact"><span class="k">Best rank</span><span class="v">${app.bestRank ?? '—'}</span></div>
+      <div class="fact"><span class="k">In country</span><span class="v">${app.bestCountry ? `${countryFlag(app.bestCountry)} <span class="cc clickable" data-code="${app.bestCountry}" title="${escapeHtml(COUNTRY_NAME_BY_CODE[app.bestCountry] || '')}">${app.bestCountry}</span>` : '—'}</span></div>
+      <div class="fact"><span class="k">On store</span><span class="v">${app.bestPlatform ? platformLabel(app.bestPlatform) : '—'}</span></div>
+      <div class="fact"><span class="k">Current avg. rank</span><span class="v">${app.avgRank ?? '—'}</span></div>
+      <div class="fact"><span class="k">Countries in top</span><span class="v">${app.countriesFound}</span></div>
+      <div class="fact"><span class="k">Weekly change</span><span class="v">${app.trendDelta7d != null ? (app.trendDelta7d>0?'+':'') + app.trendDelta7d : '—'}</span></div>
+      <div class="fact"><span class="k">Live status</span><span class="v">${appInfo && appInfo.liveStatus ? escapeHtml(appInfo.liveStatus) : '—'}</span></div>
+    </div>
+  `;
+}
+
+function renderSearch(){
+  const appQuery = document.getElementById('fAppInput').value.trim().toLowerCase();
+  const countryQuery = document.getElementById('fCountryInput').value.trim().toLowerCase();
+  const platformQuery = document.getElementById('fPlatformInput').value.trim().toLowerCase();
+  const keyword = document.getElementById('fKeyword').value.trim().toLowerCase();
+  const rankMin = document.getElementById('fRankMin').value;
+  const rankMax = document.getElementById('fRankMax').value;
+
+  const appNameById = new Map(DATA.apps.map(a => [a.id, a.name]));
+
+  let rows = DATA.latest.filter(r => {
+    if(appQuery && !(appNameById.get(r.appId) || '').toLowerCase().includes(appQuery)) return false;
+    if(countryQuery){
+      const nm = (COUNTRY_NAME_BY_CODE[r.country] || r.country || '').toLowerCase();
+      const code = (r.country || '').toLowerCase();
+      if(!nm.includes(countryQuery) && !code.includes(countryQuery)) return false;
+    }
+    if(platformQuery && !platformLabel(r.platform).toLowerCase().includes(platformQuery)) return false;
+    if(keyword && !(r.keyword||'').toLowerCase().includes(keyword)) return false;
+    if(rankMin && (r.rank == null || r.rank < Number(rankMin))) return false;
+    if(rankMax && (r.rank == null || r.rank > Number(rankMax))) return false;
+    return true;
+  });
+
+  const sortKey = searchSort.key, dir = searchSort.dir === 'asc' ? 1 : -1;
+  rows = rows.slice().sort((a,b) => {
+    let av, bv;
+    if(sortKey === 'app'){ av = appNameById.get(a.appId)||''; bv = appNameById.get(b.appId)||''; }
+    else if(sortKey === 'keywordCount'){ av = (APP_KEYWORD_COUNT.get(a.appId)||new Set()).size; bv = (APP_KEYWORD_COUNT.get(b.appId)||new Set()).size; }
+    else if(sortKey === 'countryCount'){ av = (APP_COUNTRY_COUNT.get(a.appId)||new Set()).size; bv = (APP_COUNTRY_COUNT.get(b.appId)||new Set()).size; }
+    else if(sortKey === 'totalCount'){ av = APP_TOTAL_COUNT.get(a.appId)||0; bv = APP_TOTAL_COUNT.get(b.appId)||0; }
+    else if(sortKey === 'rank'){ av = a.rank==null?9999:a.rank; bv = b.rank==null?9999:b.rank; }
+    else if(sortKey === 'checkDate'){ av = a.checkDate; bv = b.checkDate; }
+    else { av = a[sortKey]||''; bv = b[sortKey]||''; }
+    if(av < bv) return -1*dir;
+    if(av > bv) return 1*dir;
+    return 0;
+  });
+
+  document.getElementById('resultsCount').textContent = `${rows.length.toLocaleString('en-US')} results`;
+
+  const body = document.getElementById('searchBody');
+  const MAX_RENDER = 500;
+  const shown = rows.slice(0, MAX_RENDER);
+  body.innerHTML = shown.map((r,i) => `
+    <tr>
+      <td class="num">${i+1}</td>
+      <td>${escapeHtml(appNameById.get(r.appId) || ('#'+r.appId))}</td>
+      <td class="num"><span class="kw-count clickable" data-app="${r.appId}" title="Show all rankings for this app, every country">${(APP_KEYWORD_COUNT.get(r.appId)||new Set()).size}</span></td>
+      <td class="num"><span class="kw-count">${(APP_COUNTRY_COUNT.get(r.appId)||new Set()).size}</span></td>
+      <td class="num"><span class="kw-count">${APP_TOTAL_COUNT.get(r.appId)||0}</span></td>
+      <td>${escapeHtml(r.keyword||'—')}</td>
+      <td>${r.country ? `${countryFlag(r.country)} <span class="cc clickable" data-code="${r.country}" title="${escapeHtml(COUNTRY_NAME_BY_CODE[r.country] || '')}">${r.country}</span>` : '—'}</td>
+      <td>${platformLabel(r.platform)}</td>
+      <td class="num">${r.rank}</td>
+      <td class="num">${fmtDate(r.checkDate)}</td>
+    </tr>
+  `).join('') + (rows.length > MAX_RENDER ? `<tr><td colspan="10" style="text-align:center; color:var(--text-faint); padding:14px;">Showing the first ${MAX_RENDER} of ${rows.length} results — narrow your filters to see more</td></tr>` : '');
+}
+
+bindEvents();
+loadData();
+</script>
+<script>
+(function(){
+  var TOKEN_KEY = "keitaro_dashboard_token";
+  var TOKEN_EXPIRY_KEY = "keitaro_dashboard_token_expiry";
+  var REMEMBER_MS = 7 * 24 * 60 * 60 * 1000;
+
+  function validateToken(token){
+    return fetch('/api/keitaro-filters', { headers: { 'x-api-token': token } }).then(function(res){ return res.status; });
+  }
+
+  function showApp(){
+    document.getElementById('loginView').hidden = true;
+    document.getElementById('appView').hidden = false;
+  }
+  function showLogin(){
+    document.getElementById('loginView').hidden = false;
+    document.getElementById('appView').hidden = true;
+  }
+  function clearSession(){
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(TOKEN_EXPIRY_KEY);
+  }
+
+  function login(password){
+    var errEl = document.getElementById('loginError');
+    errEl.textContent = '';
+    validateToken(password).then(function(status){
+      if(status !== 200){ throw new Error('bad'); }
+      localStorage.setItem(TOKEN_KEY, password);
+      localStorage.setItem(TOKEN_EXPIRY_KEY, String(Date.now() + REMEMBER_MS));
+      showApp();
+      if(typeof loadData === 'function') loadData();
+    }).catch(function(){
+      clearSession();
+      errEl.textContent = 'Incorrect password.';
+    });
+  }
+
+  document.getElementById('loginForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    login(document.getElementById('password').value);
+  });
+  var logoutBtn = document.getElementById('logoutBtn');
+  if(logoutBtn){
+    logoutBtn.addEventListener('click', function(){
+      clearSession();
+      location.reload();
+    });
+  }
+  var refreshBtn = document.getElementById('refreshBtn');
+  if(refreshBtn){
+    refreshBtn.addEventListener('click', function(){
+      for(var i = localStorage.length - 1; i >= 0; i--){
+        var k = localStorage.key(i);
+        if(k && k.indexOf(CACHE_PREFIX) === 0) localStorage.removeItem(k);
+      }
+      loadData();
+    });
+  }
+
+  var savedToken = localStorage.getItem(TOKEN_KEY);
+  var savedExpiry = Number(localStorage.getItem(TOKEN_EXPIRY_KEY) || 0);
+  if(savedToken && Date.now() < savedExpiry){
+    showApp();
+    validateToken(savedToken).then(function(status){
+      if(status === 401){ clearSession(); showLogin(); }
+    });
+  } else {
+    clearSession();
+  }
+})();
+</script>
+</body>
+</html>

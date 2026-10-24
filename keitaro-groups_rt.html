@@ -1,0 +1,645 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Clicks by Group - Keitaro</title>
+<style>
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f5f7fb;color:#172033;overflow-x:hidden}
+.wrap{max-width:1180px;margin:auto;padding:24px 14px 40px}
+h1{margin:0 0 6px;font-size:28px}.sub{color:#6b7280;margin-bottom:18px}
+.topbar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+.nav{display:flex;gap:10px;margin-bottom:18px}
+.nav a{color:#172033;text-decoration:none;font-size:14px;padding:9px 14px;border-radius:10px;border:1px solid #d1d5db;background:#fff;cursor:pointer;-webkit-tap-highlight-color:rgba(17,24,39,.15);touch-action:manipulation}
+.nav a:hover{border-color:#9ca3af}
+.nav a:active{background:#f3f4f6}
+.nav a.active{background:#111827;color:#fff;border-color:#111827}
+.nav a.active:hover{border-color:#111827}
+.nav a.active:active{background:#1f2937}
+.login{max-width:420px;margin:12vh auto 0;background:#fff;border:1px solid #e5e7eb;border-radius:20px;padding:26px;box-shadow:0 12px 32px rgba(17,24,39,.08)}
+.login h1{font-size:26px;margin-bottom:8px}.login p{color:#6b7280;margin-top:0}
+input{padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;font-size:15px;direction:ltr;box-sizing:border-box;max-width:100%}
+input[type=password]{width:100%}
+button{border:0;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;cursor:pointer}
+.primary{width:100%;margin-top:12px;background:#111827;color:#fff}
+.logout{background:#fff;border:1px solid #d1d5db}
+.error{color:#b91c1c;margin-top:10px;font-size:14px;min-height:20px}
+.hidden{display:none}
+.updating-badge{font-size:12px;color:#6b7280;font-weight:600}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.filters button{background:#fff;border:1px solid #d1d5db;color:#172033}
+.filters button.active{background:#111827;color:#fff;border-color:#111827}
+.filters .range{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.filters .range[hidden]{display:none}
+.filters input[type=date]{min-width:0;flex:1 1 128px}
+#entityFilters input[type=text]{flex:1 1 150px;min-width:0}
+#rangeSelect{background:#fff;border:1px solid #d1d5db;color:#172033;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;cursor:pointer;min-width:160px}
+.loading-overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;gap:12px;flex-direction:column;background:rgba(245,247,251,.72);z-index:50;opacity:0;pointer-events:none;transition:opacity .15s}
+.loading-overlay.active{opacity:1;pointer-events:auto}
+.progress-bar-track{width:220px;height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden}
+.progress-bar-fill{height:100%;width:0%;background:#111827;border-radius:999px;transition:width .2s linear}
+.loading-overlay span{font-size:14px;color:#6b7280;font-weight:600}
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px;margin-bottom:20px}
+.kpi{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:16px 18px;box-shadow:0 8px 24px rgba(17,24,39,.06)}
+.kpi .label{font-size:13px;color:#6b7280;margin-bottom:6px}
+.kpi .value{font-size:26px;font-weight:700}
+.panel{background:#fff;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;box-shadow:0 8px 24px rgba(17,24,39,.06);margin-bottom:20px}
+.panel h2{margin:0;padding:15px 18px;font-size:17px;background:#111827;color:#fff;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.panel h2 .count{font-weight:400;font-size:13px;opacity:.85}
+.panel .body{padding:16px 18px}
+.chart{width:100%;height:220px;display:block}
+.chart-toggle{display:flex;gap:18px;margin-bottom:18px;font-size:14px}
+.chart-toggle label{display:flex;align-items:center;gap:6px;cursor:pointer}
+.chart-toggle .swatch{width:12px;height:12px;border-radius:3px;display:inline-block}
+.groupGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.muted{color:#6b7280;padding:20px;text-align:center}
+#content{transition:opacity .15s}
+@media(max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}.groupGrid{grid-template-columns:1fr}}
+@media(max-width:560px){.kpis{grid-template-columns:1fr}.login{margin:8vh 12px 0}}
+</style>
+</head>
+<body>
+<section id="loginView" class="login">
+  <h1>Clicks Dashboard</h1>
+  <p>Enter the password to view Keitaro click data.</p>
+  <form id="loginForm">
+    <input id="password" type="password" autocomplete="current-password" placeholder="Password" required>
+    <button class="primary" type="submit">Login</button>
+    <div id="loginError" class="error"></div>
+  </form>
+</section>
+
+<div id="loadingOverlay" class="loading-overlay"><div class="progress-bar-track"><div class="progress-bar-fill" id="progressFill"></div></div><span id="progressPct">Loading… 0%</span></div>
+
+<main id="appView" class="wrap hidden">
+  <div class="topbar">
+    <div><h1>Clicks by Group - Keitaro</h1><div class="sub" id="rangeLabel"></div></div>
+    <span id="updatingBadge" class="updating-badge hidden">Updating…</span>
+    <button id="refreshBtn" class="logout" type="button">↻ Refresh</button>
+    <button id="logoutBtn" class="logout">Logout</button>
+  </div>
+
+    <div class="nav">
+    <a href="keitaro_rt.html">General Dashboard</a>
+    <a href="keitaro-groups_rt.html" class="active">By Group</a>
+    <a href="offer_rt.html">Offer</a>
+    <a href="chat_rt.html">Chat</a>
+  </div>
+
+  <div class="filters" id="filters">
+    <select id="rangeSelect">
+      <option value="range:1">Today</option>
+      <option value="range:7">Last 7 Days</option>
+      <option value="range:30" selected>Last 30 Days</option>
+      <option value="range:90">Last 90 Days</option>
+      <option value="preset:yesterday">Yesterday</option>
+      <option value="preset:lastweek">Last Week</option>
+      <option value="preset:lastmonth">Last Month</option>
+      <option value="custom">Custom Range…</option>
+    </select>
+    <div class="range" id="customRange" hidden>
+      <input type="date" id="fromInput">
+      <span>to</span>
+      <input type="date" id="toInput">
+      <button id="applyRange">Apply</button>
+    </div>
+  </div>
+
+  <div class="filters" id="entityFilters">
+    <input type="text" id="filterGroup" list="groupOptions" placeholder="Filter by group / brand">
+    <datalist id="groupOptions"></datalist>
+    <input type="text" id="filterCountry" list="countryOptions" placeholder="Filter by country">
+    <datalist id="countryOptions"></datalist>
+    <input type="text" id="filterOffer" list="offerOptions" placeholder="Filter by offer">
+    <datalist id="offerOptions"></datalist>
+    <button id="clearFilters" class="logout">Clear Filters</button>
+  </div>
+
+  <div class="chart-toggle">
+    <label><input type="checkbox" id="toggleClicks" checked><span class="swatch" style="background:#111827"></span>Clicks</label>
+    <label><input type="checkbox" id="toggleUnique" checked><span class="swatch" style="background:#2563eb"></span>Unique Clicks</label>
+    <label><input type="checkbox" id="toggleReg" checked><span class="swatch" style="background:#059669"></span>Reg</label>
+    <label><input type="checkbox" id="toggleFtd" checked><span class="swatch" style="background:#dc2626"></span>FTD</label>
+  </div>
+
+  <div id="content">
+    <div class="kpis">
+      <div class="kpi"><div class="label">Total Clicks</div><div class="value" id="kpiClicks">-</div></div>
+      <div class="kpi"><div class="label">Unique Clicks</div><div class="value" id="kpiUnique">-</div></div>
+      <div class="kpi"><div class="label">Total Reg</div><div class="value" id="kpiReg">-</div></div>
+      <div class="kpi"><div class="label">Total FTD</div><div class="value" id="kpiFtd">-</div></div>
+      <div class="kpi"><div class="label">Groups</div><div class="value" id="kpiGroups">-</div></div>
+      <div class="kpi"><div class="label">Date Range</div><div class="value" id="kpiRange" style="font-size:16px">-</div></div>
+    </div>
+
+    <div class="panel">
+      <h2>Total - All Groups</h2>
+      <div class="body"><svg id="overallChart" class="chart" viewBox="0 0 1000 220" preserveAspectRatio="none"></svg></div>
+    </div>
+
+    <div id="groupCharts" class="groupGrid"></div>
+  </div>
+</main>
+
+<script>
+const API_BASE = "";
+const TOKEN_KEY = "rt_dashboard_token";
+const TOKEN_EXPIRY_KEY = "rt_dashboard_token_expiry";
+const EXPECTED_SCOPE = "rt";
+const REMEMBER_MS = 7 * 24 * 60 * 60 * 1000;
+
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function fmt(n){return Number(n||0).toLocaleString('en-US');}
+function toISO(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+
+const CACHE_PREFIX = 'rt_cache_';
+function todayKey(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function getCached(key){
+  try{
+    const raw = localStorage.getItem(CACHE_PREFIX + key);
+    if(!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed.day === todayKey() ? parsed.data : null;
+  }catch{ return null; }
+}
+// Like getCached, but also returns data from a previous day (marked not-fresh) so the
+// page can render instantly from last-known data while fresh data loads in the background,
+// instead of blocking on a full page load every time the daily cache expires.
+function peekCached(key){
+  try{
+    const raw = localStorage.getItem(CACHE_PREFIX + key);
+    if(!raw) return null;
+    const parsed = JSON.parse(raw);
+    return { data: parsed.data, fresh: parsed.day === todayKey() };
+  }catch{ return null; }
+}
+function purgeStaleCache(){
+  // Keep a few days of history (instead of wiping anything not from today) so a stale
+  // entry is still available for the instant-render-then-refresh flow above.
+  const cutoff = Date.now() - 3*86400000;
+  for(let i = localStorage.length - 1; i >= 0; i--){
+    const k = localStorage.key(i);
+    if(!k || !k.startsWith(CACHE_PREFIX)) continue;
+    try{
+      const day = JSON.parse(localStorage.getItem(k)).day;
+      if(new Date(day + 'T00:00:00').getTime() < cutoff) localStorage.removeItem(k);
+    }catch{ localStorage.removeItem(k); }
+  }
+}
+function setCached(key, data){
+  try{
+    localStorage.setItem(CACHE_PREFIX + key, JSON.stringify({ day: todayKey(), data }));
+    purgeStaleCache();
+  }catch{}
+}
+
+// Data in the DB only updates once a day (always current through yesterday), so cache
+// each unique query for the rest of the calendar day instead of re-hitting MySQL on every reload.
+async function apiFetch(from, to, token, filters){
+  const params = new URLSearchParams({ from, to, ...(filters||{}) });
+  const url = `${API_BASE}/api/keitaro?${params.toString()}`;
+  const cached = getCached(url);
+  if(cached) return cached;
+  const res = await fetch(url, { headers: { 'x-api-token': token } });
+  if(!res.ok) throw new Error('REQUEST_FAILED_' + res.status);
+  const data = await res.json();
+  if(data.scope !== EXPECTED_SCOPE) throw new Error('REQUEST_FAILED_401');
+  setCached(url, data);
+  return data;
+}
+
+async function apiFetchRegFtd(from, to, token, filters){
+  // Reg/FTD now sourced from keitaro_conversions_report (see keitaro-mbm.html rollout).
+  const params = new URLSearchParams({ from, to, source: 'report', ...(filters||{}) });
+  const url = `${API_BASE}/api/keitaro-regftd?${params.toString()}`;
+  const cached = getCached(url);
+  if(cached) return cached;
+  const res = await fetch(url, { headers: { 'x-api-token': token } });
+  if(!res.ok) throw new Error('REQUEST_FAILED_' + res.status);
+  const data = await res.json();
+  if(data.scope !== EXPECTED_SCOPE) throw new Error('REQUEST_FAILED_401');
+  setCached(url, data);
+  return data;
+}
+
+let filterOptions = { groups: [], countries: [], offers: [] };
+
+async function loadFilterOptions(token){
+  const url = `${API_BASE}/api/keitaro-filters`;
+  const cached = getCached(url);
+  if(cached){
+    filterOptions = cached;
+    fillDatalist('groupOptions', filterOptions.groups);
+    fillDatalist('countryOptions', filterOptions.countries);
+    fillDatalist('offerOptions', filterOptions.offers);
+    return;
+  }
+  try{
+    const res = await fetch(url, { headers: { 'x-api-token': token } });
+    if(!res.ok) return;
+    filterOptions = await res.json();
+    setCached(url, filterOptions);
+    fillDatalist('groupOptions', filterOptions.groups);
+    fillDatalist('countryOptions', filterOptions.countries);
+    fillDatalist('offerOptions', filterOptions.offers);
+  }catch{}
+}
+
+function fillDatalist(id, values){
+  document.getElementById(id).innerHTML = (values||[]).map(v=>`<option value="${esc(v)}"></option>`).join('');
+}
+
+function currentFilters(){
+  const group = document.getElementById('filterGroup').value.trim();
+  const country = document.getElementById('filterCountry').value.trim();
+  const offer = document.getElementById('filterOffer').value.trim();
+  const filters = {};
+  if(group && filterOptions.groups.includes(group)) filters.groupName = group;
+  if(country && filterOptions.countries.includes(country)) filters.countryCode = country;
+  if(offer && filterOptions.offers.includes(offer)) filters.offerId = offer;
+  return filters;
+}
+
+const CHART_SERIES = [
+  { key: 'clicks', color: '#111827', label: 'Clicks', toggleId: 'toggleClicks' },
+  { key: 'unique_clicks', color: '#2563eb', label: 'Unique Clicks', toggleId: 'toggleUnique' },
+  { key: 'regs', color: '#059669', label: 'Reg', toggleId: 'toggleReg' },
+  { key: 'ftds', color: '#dc2626', label: 'FTD', toggleId: 'toggleFtd' },
+];
+
+function dateRangeList(from, to){
+  const start = new Date(from+'T00:00:00');
+  const end = new Date(to+'T00:00:00');
+  const days = [];
+  for(let d=new Date(start); d<=end; d.setDate(d.getDate()+1)){
+    days.push(toISO(d));
+  }
+  return days;
+}
+
+function fillByDate(byDate, regFtdByDate, days){
+  const map = new Map(byDate.map(r=>[r.date, r]));
+  const regFtdMap = new Map(regFtdByDate.map(r=>[r.date, r]));
+  return days.map(date=>{
+    const v = map.get(date);
+    const rf = regFtdMap.get(date);
+    return {
+      date,
+      clicks: v?Number(v.clicks)||0:0,
+      unique_clicks: v?Number(v.unique_clicks)||0:0,
+      regs: rf?Number(rf.regs)||0:0,
+      ftds: rf?Number(rf.ftds)||0:0,
+    };
+  });
+}
+
+function buildGroupSeries(byGroupDate, regFtdByGroupDate, days){
+  const groups = new Map();
+  byGroupDate.forEach(r=>{
+    const key = r.group_name || (r.campaign_group_id ? `#${r.campaign_group_id}` : 'No Group');
+    if(!groups.has(key)) groups.set(key, { clicks: new Map(), regFtd: new Map() });
+    groups.get(key).clicks.set(r.date, { clicks: Number(r.clicks)||0, unique_clicks: Number(r.unique_clicks)||0 });
+  });
+  regFtdByGroupDate.forEach(r=>{
+    const key = r.group_name || (r.group_id ? `#${r.group_id}` : 'No Group');
+    if(!groups.has(key)) groups.set(key, { clicks: new Map(), regFtd: new Map() });
+    groups.get(key).regFtd.set(r.date, { regs: Number(r.regs)||0, ftds: Number(r.ftds)||0 });
+  });
+  const result = [];
+  groups.forEach((maps, name)=>{
+    const rows = days.map(date=>{
+      const v = maps.clicks.get(date);
+      const rf = maps.regFtd.get(date);
+      return {
+        date,
+        clicks: v?v.clicks:0,
+        unique_clicks: v?v.unique_clicks:0,
+        regs: rf?rf.regs:0,
+        ftds: rf?rf.ftds:0,
+      };
+    });
+    const total = rows.reduce((s,r)=>s+r.clicks,0);
+    result.push({ name, rows, total });
+  });
+  result.sort((a,b)=>b.total-a.total);
+  return result;
+}
+
+function renderLineChart(svg, rows){
+  const w=1000, h=220, padL=55, padR=15, padT=15, padB=30;
+  svg.innerHTML = '';
+  if(!rows.length) return;
+
+  const series = CHART_SERIES.filter(s => document.getElementById(s.toggleId).checked);
+  if(!series.length) return;
+
+  const innerW = w-padL-padR, innerH = h-padT-padB;
+  const max = Math.max(...rows.flatMap(d=>series.map(s=>Number(d[s.key])||0)), 1);
+  const stepX = rows.length>1 ? innerW/(rows.length-1) : 0;
+  const xAt = i => padL+i*stepX;
+  const yAt = v => padT+innerH-(v/max)*innerH;
+
+  let grid = '';
+  for(let g=0; g<=4; g++){
+    const y = padT + innerH*g/4;
+    const val = Math.round(max*(1-g/4));
+    grid += `<line x1="${padL}" y1="${y}" x2="${w-padR}" y2="${y}" stroke="#e5e7eb" stroke-width="1"/>`;
+    grid += `<text x="${padL-8}" y="${y+4}" font-size="10" fill="#6b7280" text-anchor="end">${fmt(val)}</text>`;
+  }
+
+  const paths = series.map(s=>{
+    const pts = rows.map((d,i)=>`${xAt(i)},${yAt(Number(d[s.key])||0)}`).join(' ');
+    const dots = rows.map((d,i)=>{
+      const v = Number(d[s.key])||0;
+      return `<circle cx="${xAt(i)}" cy="${yAt(v)}" r="2.5" fill="${s.color}"><title>${esc(d.date)} - ${s.label}: ${fmt(v)}</title></circle>`;
+    }).join('');
+    return `<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2"/>${dots}`;
+  }).join('');
+
+  const labelStep = Math.max(1, Math.ceil(rows.length/8));
+  const labels = rows.map((d,i)=>{
+    if(i % labelStep !== 0) return '';
+    return `<text x="${xAt(i)}" y="${h-8}" font-size="10" fill="#6b7280" text-anchor="middle">${esc(String(d.date).slice(5))}</text>`;
+  }).join('');
+
+  svg.innerHTML = grid + paths + labels;
+}
+
+function renderGroupCharts(groupSeries){
+  const container = document.getElementById('groupCharts');
+  if(!groupSeries.length){ container.innerHTML = '<div class="panel"><div class="muted">No group data in the selected range</div></div>'; return; }
+  container.innerHTML = groupSeries.map((g,i)=>`
+    <div class="panel">
+      <h2><span>${esc(g.name)}</span><span class="count">${fmt(g.total)} clicks</span></h2>
+      <div class="body"><svg id="groupChart${i}" class="chart" viewBox="0 0 1000 220" preserveAspectRatio="none"></svg></div>
+    </div>`).join('');
+  groupSeries.forEach((g,i)=>{
+    renderLineChart(document.getElementById(`groupChart${i}`), g.rows);
+  });
+}
+
+let lastData = null;
+let lastRegFtdData = null;
+
+function renderAll(data, regFtdData){
+  lastData = data;
+  lastRegFtdData = regFtdData;
+  document.getElementById('kpiClicks').textContent = fmt(data.totals.clicks);
+  document.getElementById('kpiUnique').textContent = fmt(data.totals.unique_clicks);
+  document.getElementById('kpiReg').textContent = fmt(regFtdData.totals.regs);
+  document.getElementById('kpiFtd').textContent = fmt(regFtdData.totals.ftds);
+  document.getElementById('kpiGroups').textContent = fmt(data.byGroup.length);
+  document.getElementById('kpiRange').textContent = `${data.from} – ${data.to}`;
+  document.getElementById('rangeLabel').textContent = `${data.from} to ${data.to}`;
+  rerenderCharts();
+}
+
+function rerenderCharts(){
+  if(!lastData || !lastRegFtdData) return;
+  const days = dateRangeList(lastData.from, lastData.to);
+  renderLineChart(document.getElementById('overallChart'), fillByDate(lastData.byDate, lastRegFtdData.byDate, days));
+  renderGroupCharts(buildGroupSeries(lastData.byGroupDate, lastRegFtdData.byGroupDate, days));
+}
+
+document.getElementById('toggleClicks').addEventListener('change', rerenderCharts);
+document.getElementById('toggleUnique').addEventListener('change', rerenderCharts);
+document.getElementById('toggleReg').addEventListener('change', rerenderCharts);
+document.getElementById('toggleFtd').addEventListener('change', rerenderCharts);
+
+let state = { from: null, to: null };
+
+let progressTimer = null;
+function setLoading(isLoading){
+  document.getElementById('loadingOverlay').classList.toggle('active', isLoading);
+  document.getElementById('content').style.opacity = isLoading ? '0.5' : '1';
+  const fill = document.getElementById('progressFill');
+  const pctEl = document.getElementById('progressPct');
+  clearInterval(progressTimer);
+  if(isLoading){
+    const startTime = Date.now();
+    const DURATION_MS = 110000;
+    fill.style.width = '0%';
+    pctEl.textContent = 'Loading… 0%';
+    progressTimer = setInterval(()=>{
+      const elapsed = Date.now() - startTime;
+      const pct = Math.min(99, Math.round(elapsed / DURATION_MS * 100));
+      fill.style.width = pct + '%';
+      pctEl.textContent = `Loading… ${pct}%`;
+    }, 200);
+  }
+}
+
+function setUpdating(isUpdating){
+  const el = document.getElementById('updatingBadge');
+  if(el) el.classList.toggle('hidden', !isUpdating);
+}
+
+async function loadRange(from, to){
+  state.from = from; state.to = to;
+  const token = localStorage.getItem(TOKEN_KEY);
+  setLoading(true);
+  try{
+    const filters = currentFilters();
+    const [data, regFtdData] = await Promise.all([
+      apiFetch(from, to, token, filters),
+      apiFetchRegFtd(from, to, token, filters),
+    ]);
+    renderAll(data, regFtdData);
+  } finally {
+    setLoading(false);
+  }
+}
+
+function reloadWithFilters(){
+  if(state.from && state.to) loadRange(state.from, state.to);
+}
+
+['filterGroup','filterCountry','filterOffer'].forEach(id=>{
+  document.getElementById(id).addEventListener('change', reloadWithFilters);
+});
+document.getElementById('clearFilters').addEventListener('click', ()=>{
+  document.getElementById('filterGroup').value = '';
+  document.getElementById('filterCountry').value = '';
+  document.getElementById('filterOffer').value = '';
+  reloadWithFilters();
+});
+
+function applyPreset(days){
+  const to = new Date();
+  const from = new Date(Date.now() - (days-1)*86400000);
+  document.getElementById('fromInput').value = toISO(from);
+  document.getElementById('toInput').value = toISO(to);
+  loadRange(toISO(from), toISO(to));
+}
+
+function applyCalendarPreset(preset){
+  const now = new Date();
+  let from, to;
+  if(preset === 'yesterday'){
+    from = to = new Date(now.getFullYear(), now.getMonth(), now.getDate()-1);
+  } else if(preset === 'lastweek'){
+    const thisSunday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
+    from = new Date(thisSunday.getFullYear(), thisSunday.getMonth(), thisSunday.getDate() - 7);
+    to = new Date(thisSunday.getFullYear(), thisSunday.getMonth(), thisSunday.getDate() - 1);
+  } else if(preset === 'lastmonth'){
+    from = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    to = new Date(now.getFullYear(), now.getMonth(), 0);
+  }
+  document.getElementById('fromInput').value = toISO(from);
+  document.getElementById('toInput').value = toISO(to);
+  loadRange(toISO(from), toISO(to));
+}
+
+document.getElementById('rangeSelect').addEventListener('change', e=>{
+  const value = e.target.value;
+  const customRange = document.getElementById('customRange');
+  if(value === 'custom'){
+    customRange.hidden = false;
+    return;
+  }
+  customRange.hidden = true;
+  const [kind, arg] = value.split(':');
+  if(kind === 'range') applyPreset(Number(arg));
+  else if(kind === 'preset') applyCalendarPreset(arg);
+});
+document.getElementById('applyRange').addEventListener('click', ()=>{
+  const from = document.getElementById('fromInput').value;
+  const to = document.getElementById('toInput').value;
+  if(from && to) loadRange(from, to);
+});
+
+function showApp(){
+  document.getElementById('loginView').classList.add('hidden');
+  document.getElementById('appView').classList.remove('hidden');
+}
+function showLogin(){
+  document.getElementById('loginView').classList.remove('hidden');
+  document.getElementById('appView').classList.add('hidden');
+}
+function clearSession(){
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(TOKEN_EXPIRY_KEY);
+}
+
+async function loadInto(token){
+  const today = new Date();
+  const from = new Date(Date.now() - 29*86400000);
+  setLoading(true);
+  try{
+    const [data, regFtdData] = await Promise.all([
+      apiFetch(toISO(from), toISO(today), token),
+      apiFetchRegFtd(toISO(from), toISO(today), token),
+    ]);
+    state.from = toISO(from); state.to = toISO(today);
+    document.getElementById('fromInput').value = toISO(from);
+    document.getElementById('toInput').value = toISO(today);
+    renderAll(data, regFtdData);
+    loadFilterOptions(token);
+  } finally {
+    setLoading(false);
+  }
+}
+
+async function loginWithPassword(password){
+  document.getElementById('loginError').textContent = '';
+  try{
+    await loadInto(password);
+    localStorage.setItem(TOKEN_KEY, password);
+    localStorage.setItem(TOKEN_EXPIRY_KEY, String(Date.now() + REMEMBER_MS));
+    showApp();
+  } catch {
+    clearSession();
+    document.getElementById('loginError').textContent = 'Incorrect password.';
+  }
+}
+
+async function resumeSession(token){
+  // Trust the saved 7-day session immediately; only kick back to login on a genuine 401,
+  // never on a slow/failed data request (so a flaky API call can't wipe a valid session).
+  showApp();
+  const today = new Date();
+  const from = new Date(Date.now() - 29*86400000);
+  const url1 = `${API_BASE}/api/keitaro?${new URLSearchParams({ from: toISO(from), to: toISO(today) }).toString()}`;
+  const url2 = `${API_BASE}/api/keitaro-regftd?${new URLSearchParams({ from: toISO(from), to: toISO(today), source: 'report' }).toString()}`;
+  const cached1 = peekCached(url1);
+  const cached2 = peekCached(url2);
+
+  if(cached1 && cached2){
+    // Instant render from last-known data (even if from a previous day) instead of
+    // blocking on a fresh fetch every time the daily cache expires.
+    state.from = toISO(from); state.to = toISO(today);
+    document.getElementById('fromInput').value = toISO(from);
+    document.getElementById('toInput').value = toISO(today);
+    renderAll(cached1.data, cached2.data);
+    loadFilterOptions(token);
+    if(!cached1.fresh || !cached2.fresh){
+      setUpdating(true);
+      try{
+        const [data, regFtdData] = await Promise.all([
+          apiFetch(toISO(from), toISO(today), token),
+          apiFetchRegFtd(toISO(from), toISO(today), token),
+        ]);
+        state.from = toISO(from); state.to = toISO(today);
+        renderAll(data, regFtdData);
+      } catch(err){
+        if(err && err.message === 'REQUEST_FAILED_401'){
+          clearSession();
+          showLogin();
+          document.getElementById('loginError').textContent = 'Your session expired, please log in again.';
+        }
+        // else: keep showing the last-known data silently; don't disrupt the user over a background refresh hiccup
+      } finally {
+        setUpdating(false);
+      }
+    }
+    return;
+  }
+
+  // No usable cache yet (first-ever visit) — fall back to the original blocking load.
+  try{
+    await loadInto(token);
+  } catch(err){
+    if(err && err.message === 'REQUEST_FAILED_401'){
+      clearSession();
+      showLogin();
+      document.getElementById('loginError').textContent = 'Your session expired, please log in again.';
+    } else {
+      document.getElementById('rangeLabel').textContent = 'Error loading data — try refreshing the page';
+    }
+  }
+}
+
+document.getElementById('loginForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  loginWithPassword(document.getElementById('password').value);
+});
+document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  clearSession();
+  location.reload();
+});
+
+function clearAllCache(){
+  for(let i = localStorage.length - 1; i >= 0; i--){
+    const k = localStorage.key(i);
+    if(k && k.startsWith(CACHE_PREFIX)) localStorage.removeItem(k);
+  }
+}
+document.getElementById('refreshBtn').addEventListener('click', ()=>{
+  clearAllCache();
+  if(state.from && state.to) loadRange(state.from, state.to);
+});
+
+const savedToken = localStorage.getItem(TOKEN_KEY);
+const savedExpiry = Number(localStorage.getItem(TOKEN_EXPIRY_KEY) || 0);
+if(savedToken && Date.now() < savedExpiry){
+  resumeSession(savedToken);
+} else {
+  clearSession();
+}
+</script>
+</body>
+</html>

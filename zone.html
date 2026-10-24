@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Zones - Untracked Cloudflare Domains</title>
+<style>
+:root{color-scheme:light}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f7f8fa;color:#172033;overflow-x:hidden}
+.wrap{max-width:1400px;margin:auto;padding:24px 14px 40px}
+h1{margin:0 0 6px;font-size:28px}.sub{color:#6b7280;margin-bottom:18px}
+.topbar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+.nav{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.nav a{color:#172033;text-decoration:none;font-size:14px;padding:9px 14px;border-radius:10px;border:1px solid #d1d5db;background:#fff;cursor:pointer}
+.nav a:hover{border-color:#9ca3af}
+.nav a.active{background:#111827;color:#fff;border-color:#111827}
+.login{max-width:420px;margin:12vh auto 0;background:#fff;border:1px solid #e5e7eb;border-radius:20px;padding:26px;box-shadow:0 12px 32px rgba(17,24,39,.08)}
+.login h1{font-size:26px;margin-bottom:8px}.login p{color:#6b7280;margin-top:0}
+input{padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;font-size:15px;box-sizing:border-box;max-width:100%}
+input[type=password]{width:100%}
+button{border:0;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;cursor:pointer}
+.primary{width:100%;margin-top:12px;background:#111827;color:#fff}
+.logout{background:#fff;border:1px solid #d1d5db}
+.error{color:#b91c1c;margin-top:10px;font-size:14px;min-height:20px}
+.hidden{display:none}
+.updating-badge{font-size:12px;color:#6b7280;font-weight:600}
+.loading-overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;gap:12px;flex-direction:column;background:rgba(247,248,250,.85);z-index:50;opacity:0;pointer-events:none;transition:opacity .15s}
+.loading-overlay.active{opacity:1;pointer-events:auto}
+.progress-bar-track{width:220px;height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden}
+.progress-bar-fill{height:100%;width:0%;background:#111827;border-radius:999px;transition:width .2s linear}
+.loading-overlay span{font-size:14px;color:#6b7280;font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.stat{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:13px 14px;box-shadow:0 8px 20px rgba(17,24,39,.05)}
+.stat .label{font-size:12px;color:#6b7280;margin-bottom:4px;white-space:nowrap}
+.stat .value{font-size:22px;font-weight:700}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.toolbar input[type=text]{flex:1 1 220px;min-width:0}
+.toolbar select{background:#fff;border:1px solid #d1d5db;color:#172033;border-radius:10px;padding:10px 12px;font-size:14px;cursor:pointer}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.chip{background:#fff;border:1px solid #d1d5db;color:#374151;font-size:13px;font-weight:600;padding:7px 13px;border-radius:999px;cursor:pointer}
+.chip:hover{border-color:#9ca3af}
+.chip.active{background:#111827;color:#fff;border-color:#111827}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.actions button{background:#fff;border:1px solid #d1d5db;color:#374151;font-size:13px}
+.actions button:hover{border-color:#9ca3af}
+.panel{background:#fff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;box-shadow:0 8px 24px rgba(17,24,39,.05)}
+.table-scroll{overflow:auto;max-height:70vh}
+table{width:100%;border-collapse:collapse}
+th,td{padding:9px 12px;border-bottom:1px solid #eef0f3;text-align:left;font-size:13px;white-space:nowrap}
+th{background:#fafbfc;font-weight:600;position:sticky;top:0;z-index:1;cursor:pointer;user-select:none}
+th:hover{color:#111827}
+th .arrow{font-size:10px;margin-left:4px;color:#9ca3af}
+tr:hover td{background:#fafbfc}
+td.zone{font-weight:600}
+.badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;background:#e5e7eb;color:#374151}
+.badge-ok{background:#bbf7d0;color:#14532d}
+.badge-err{background:#fee2e2;color:#991b1b}
+.badge-checking{background:#f3f4f6;color:#9ca3af}
+.rate-bad{color:#dc2626;font-weight:700}
+.rate-warn{color:#b45309;font-weight:700}
+.muted{color:#6b7280;padding:20px;text-align:center}
+#content{transition:opacity .15s}
+@media(max-width:1100px){.stats{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<section id="loginView" class="login">
+  <h1>Untracked Zones</h1>
+  <p>Enter the password to view Cloudflare zones with no matching Keitaro record.</p>
+  <form id="loginForm">
+    <input id="password" type="password" autocomplete="current-password" placeholder="Password" required>
+    <button class="primary" type="submit">Login</button>
+    <div id="loginError" class="error"></div>
+  </form>
+</section>
+
+<div id="loadingOverlay" class="loading-overlay"><div class="progress-bar-track"><div class="progress-bar-fill" id="progressFill"></div></div><span id="progressPct">Loading… 0%</span></div>
+
+<main id="appView" class="wrap hidden">
+  <div class="topbar">
+    <div><h1>Untracked Zones</h1><div class="sub" id="rangeLabel">Cloudflare zones with no matching record in keitaro_domain / keitaro_domain_media</div></div>
+    <span id="updatingBadge" class="updating-badge hidden">Checking HTTP status…</span>
+    <button id="refreshBtn" class="logout" type="button">↻ Refresh</button>
+    <button id="logoutBtn" class="logout">Logout</button>
+  </div>
+
+  <div class="nav">
+    <a href="keitaro-mbm.html">General Dashboard</a>
+    <a href="keitaro-groups-mbm.html">By Group</a>
+    <a href="ltv.html">LTV Report</a>
+    <a href="ranking.html">Ranking</a>
+    <a href="commission.html">Commission</a>
+    <a href="commission_worker.html">Commission Worker</a>
+    <a href="operations.html">Operations Report</a>
+    <a href="operations-september.html">Operations September</a>
+    <a href="ftd.html">FTD</a>
+    <a href="offer-mbm.html">Offer</a>
+    <a href="chat-mbm.html">Chat</a>
+    <a href="domain.html">Domains</a>
+    <a href="domain_traffic.html">Traffic</a>
+    <a href="keitaro_domains.html">Domains (DB)</a>
+    <a href="onesignal.html">OneSignal</a>
+    <a href="zone.html" class="active">Zones</a>
+    <a href="keitaro_amz_group.html">Keitaro Groups</a>
+    <a href="namecheap.html">Namecheap</a>
+  </div>
+
+  <div id="content">
+    <div class="stats">
+      <div class="stat"><div class="label">Total Domains</div><div class="value" id="statTotalDomains">-</div></div>
+      <div class="stat"><div class="label">Total Untracked</div><div class="value" id="statTotal">-</div></div>
+      <div class="stat"><div class="label">🟢 index.html OK</div><div class="value" id="statIndexOk">-</div></div>
+      <div class="stat"><div class="label">🔴 index.html Error</div><div class="value" id="statIndexErr">-</div></div>
+      <div class="stat"><div class="label">🟢 Root OK</div><div class="value" id="statRootOk">-</div></div>
+      <div class="stat"><div class="label">🔴 Root Error</div><div class="value" id="statRootErr">-</div></div>
+    </div>
+
+    <div class="toolbar">
+      <input type="text" id="searchBox" placeholder="Search zone...">
+      <select id="accountFilter"><option value="all">All accounts</option></select>
+    </div>
+    <div class="chips" id="chips">
+      <button class="chip active" data-filter="all">All</button>
+      <button class="chip" data-filter="indexok">index.html OK</button>
+      <button class="chip" data-filter="indexerr">index.html Error</button>
+      <button class="chip" data-filter="rooterr">Root Error</button>
+    </div>
+    <div class="actions">
+      <button id="exportCsvBtn" type="button">⬇ Export CSV</button>
+    </div>
+
+    <div class="panel">
+      <div class="table-scroll">
+        <table>
+          <thead><tr>
+            <th title="Open domain homepage"></th>
+            <th class="sortable" data-sort="zone" data-label="Domain">Domain</th>
+            <th class="sortable" data-sort="accountLabel" data-label="Account">Account</th>
+            <th class="sortable" data-sort="group" data-label="Group">Group</th>
+            <th class="sortable" data-sort="indexCode" data-label="index.html HTTP">index.html HTTP</th>
+            <th class="sortable" data-sort="firstRootCode" data-label="first_root">first_root</th>
+            <th class="sortable" data-sort="rootCode" data-label="Root HTTP">Root HTTP</th>
+            <th class="sortable" data-sort="daysRemaining" data-label="Expires">Expires</th>
+            <th class="sortable" data-sort="campaignsCount" data-label="Campaigns">Campaigns</th>
+          </tr></thead>
+          <tbody id="tblZones"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+const API_BASE = "";
+const TOKEN_KEY = "keitaro_dashboard_token";
+const TOKEN_EXPIRY_KEY = "keitaro_dashboard_token_expiry";
+const REMEMBER_MS = 7 * 24 * 60 * 60 * 1000;
+
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+let progressTimer = null;
+function setLoading(isLoading){
+  document.getElementById('loadingOverlay').classList.toggle('active', isLoading);
+  document.getElementById('content').style.opacity = isLoading ? '0.5' : '1';
+  const fill = document.getElementById('progressFill');
+  const pctEl = document.getElementById('progressPct');
+  clearInterval(progressTimer);
+  if(isLoading){
+    const startTime = Date.now();
+    const DURATION_MS = 12000;
+    fill.style.width = '0%';
+    pctEl.textContent = 'Loading… 0%';
+    progressTimer = setInterval(()=>{
+      const elapsed = Date.now() - startTime;
+      const pct = Math.min(99, Math.round(elapsed / DURATION_MS * 100));
+      fill.style.width = pct + '%';
+      pctEl.textContent = `Loading… ${pct}%`;
+    }, 200);
+  }
+}
+function setChecking(isChecking){
+  document.getElementById('updatingBadge').classList.toggle('hidden', !isChecking);
+}
+
+let zonesData = [];
+let totalZones = 0;
+let totalZonesByAccount = {};
+let currentFilter = 'all';
+let currentAccount = 'all';
+
+async function fetchZones(token){
+  const res = await fetch(`${API_BASE}/api/zone`, { headers: { 'x-api-token': token } });
+  if(!res.ok) throw new Error('REQUEST_FAILED_' + res.status);
+  return res.json();
+}
+
+async function checkHttpBatch(token, zones){
+  const res = await fetch(`${API_BASE}/api/zone`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-token': token },
+    body: JSON.stringify({ zones }),
+  });
+  if(!res.ok) return [];
+  const data = await res.json();
+  return data.results || [];
+}
+
+async function runHttpChecks(token){
+  const chunkSize = 25;
+  const concurrency = 3;
+  const chunks = [];
+  for(let i = 0; i < zonesData.length; i += chunkSize){
+    chunks.push(zonesData.slice(i, i + chunkSize).map(z => z.zone));
+  }
+  setChecking(true);
+  let idx = 0;
+  async function worker(){
+    while(idx < chunks.length){
+      const myChunk = chunks[idx++];
+      const results = await checkHttpBatch(token, myChunk);
+      const byZone = new Map(results.map(r => [r.zone, r]));
+      for(const z of zonesData){
+        const r = byZone.get(z.zone);
+        if(r){ z.indexCode = r.indexCode; z.indexError = r.indexError; z.rootCode = r.rootCode; z.rootError = r.rootError; z.firstRootCode = r.firstRootCode; z.firstRootError = r.firstRootError; z.checked = true; }
+      }
+      renderStats();
+      renderTable();
+    }
+  }
+  await Promise.all(Array.from({ length: concurrency }, worker));
+  setChecking(false);
+}
+
+function httpCodeCell(code, error, checked){
+  if(!checked) return `<span class="badge badge-checking">Checking…</span>`;
+  if(error || !code) return `<span class="badge badge-err">⚫ Error</span>`;
+  if(code >= 200 && code < 300) return `<span class="badge badge-ok">🟢 ${code}</span>`;
+  return `<span class="badge badge-err">🔴 ${code}</span>`;
+}
+
+// first_root is the very first response before any redirect is followed — a 3xx there is
+// a normal redirect (e.g. http -> https), not a failure, so it gets its own neutral badge
+// instead of being lumped in with real errors like index.html/Root HTTP are.
+function firstRootCell(code, error, checked){
+  if(!checked) return `<span class="badge badge-checking">Checking…</span>`;
+  if(error || !code) return `<span class="badge badge-err">⚫ Error</span>`;
+  if(code >= 200 && code < 300) return `<span class="badge badge-ok">🟢 ${code}</span>`;
+  if(code >= 300 && code < 400) return `<span class="badge">↪ ${code}</span>`;
+  return `<span class="badge badge-err">🔴 ${code}</span>`;
+}
+
+function expiryCell(z){
+  if(z.daysRemaining == null) return `<span class="muted" style="padding:0">-</span>`;
+  const cls = z.daysRemaining <= 30 ? 'rate-bad' : z.daysRemaining <= 90 ? 'rate-warn' : '';
+  const dateStr = z.expiryDate ? z.expiryDate.slice(0, 10) : '';
+  return `<span class="${cls}">${esc(dateStr)} (${z.daysRemaining}d)</span>`;
+}
+
+function matchesFilter(z, filter){
+  if(filter === 'all') return true;
+  if(filter === 'indexok') return z.checked && !z.indexError && z.indexCode >= 200 && z.indexCode < 300;
+  if(filter === 'indexerr') return z.checked && (z.indexError || !(z.indexCode >= 200 && z.indexCode < 300));
+  if(filter === 'rooterr') return z.checked && (z.rootError || !(z.rootCode >= 200 && z.rootCode < 300));
+  return true;
+}
+function matchesSearch(z, q){
+  if(!q) return true;
+  return z.zone.toLowerCase().includes(q.toLowerCase());
+}
+function matchesAccount(z, account){
+  if(account === 'all') return true;
+  return z.accountLabel === account;
+}
+
+const tableSort = { key: 'zone', dir: 'asc' };
+
+function sortRows(rows){
+  const { key, dir } = tableSort;
+  const mul = dir === 'asc' ? 1 : -1;
+  return [...rows].sort((a,b)=>{
+    if(key === 'indexCode' || key === 'rootCode' || key === 'firstRootCode' || key === 'daysRemaining' || key === 'campaignsCount'){
+      const av = a[key], bv = b[key];
+      if(av == null && bv == null) return 0;
+      if(av == null) return 1;
+      if(bv == null) return -1;
+      return (av - bv) * mul;
+    }
+    let av = String(a[key] ?? '').toLowerCase(), bv = String(b[key] ?? '').toLowerCase();
+    if(av < bv) return -1*mul;
+    if(av > bv) return 1*mul;
+    return 0;
+  });
+}
+
+function renderTableHeaders(){
+  document.querySelectorAll('th.sortable').forEach(th=>{
+    const sortKey = th.dataset.sort, label = th.dataset.label;
+    const active = tableSort.key === sortKey;
+    const arrow = active ? (tableSort.dir === 'asc' ? '▲' : '▼') : '';
+    th.innerHTML = `${esc(label)}${arrow ? ` <span class="arrow">${arrow}</span>` : ''}`;
+  });
+}
+
+function renderTable(){
+  const q = document.getElementById('searchBox').value.trim();
+  const filtered = zonesData.filter(z => matchesFilter(z, currentFilter) && matchesSearch(z, q) && matchesAccount(z, currentAccount));
+  const rows = sortRows(filtered);
+  const tbody = document.getElementById('tblZones');
+  if(!rows.length){ tbody.innerHTML = `<tr><td colspan="9" class="muted">No zones match</td></tr>`; return; }
+  tbody.innerHTML = rows.map(z => `
+    <tr>
+      <td><a href="https://${esc(z.zone)}" target="_blank" rel="noopener noreferrer" title="Open ${esc(z.zone)}" style="text-decoration:none">🌐</a></td>
+      <td class="zone">${esc(z.zone)}</td>
+      <td><span class="badge">${esc(z.accountLabel || '-')}</span></td>
+      <td>${esc(z.group || '-')}</td>
+      <td>${httpCodeCell(z.indexCode, z.indexError, z.checked)}</td>
+      <td>${firstRootCell(z.firstRootCode, z.firstRootError, z.checked)}</td>
+      <td>${httpCodeCell(z.rootCode, z.rootError, z.checked)}</td>
+      <td>${expiryCell(z)}</td>
+      <td>${z.campaignsCount ?? '-'}</td>
+    </tr>
+  `).join('');
+}
+
+function renderStats(){
+  // Scoped to the selected account, so the whole summary row updates dynamically when the
+  // account filter changes instead of always showing the global totals.
+  const scoped = zonesData.filter(z => matchesAccount(z, currentAccount));
+  const total = scoped.length;
+  const indexOk = scoped.filter(z => z.checked && !z.indexError && z.indexCode >= 200 && z.indexCode < 300).length;
+  const indexErr = scoped.filter(z => z.checked && (z.indexError || !(z.indexCode >= 200 && z.indexCode < 300))).length;
+  const rootOk = scoped.filter(z => z.checked && !z.rootError && z.rootCode >= 200 && z.rootCode < 300).length;
+  const rootErr = scoped.filter(z => z.checked && (z.rootError || !(z.rootCode >= 200 && z.rootCode < 300))).length;
+  const totalDomains = currentAccount === 'all' ? totalZones : (totalZonesByAccount[currentAccount] || 0);
+  document.getElementById('statTotalDomains').textContent = totalDomains;
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statIndexOk').textContent = indexOk;
+  document.getElementById('statIndexErr').textContent = indexErr;
+  document.getElementById('statRootOk').textContent = rootOk;
+  document.getElementById('statRootErr').textContent = rootErr;
+}
+
+function renderAccountOptions(){
+  const sel = document.getElementById('accountFilter');
+  const current = sel.value;
+  const labels = [...new Set(zonesData.map(z => z.accountLabel).filter(Boolean))];
+  sel.innerHTML = '<option value="all">All accounts</option>' +
+    labels.map(l => `<option value="${esc(l)}">${esc(l)}</option>`).join('');
+  if(labels.includes(current)) sel.value = current;
+}
+
+function renderAll(){
+  renderTableHeaders();
+  renderStats();
+  renderAccountOptions();
+  renderTable();
+}
+
+document.querySelectorAll('th.sortable').forEach(th=>{
+  th.addEventListener('click', ()=>{
+    const sortKey = th.dataset.sort;
+    if(tableSort.key === sortKey){ tableSort.dir = tableSort.dir === 'asc' ? 'desc' : 'asc'; }
+    else { tableSort.key = sortKey; tableSort.dir = 'asc'; }
+    renderTableHeaders();
+    renderTable();
+  });
+});
+
+document.getElementById('searchBox').addEventListener('input', renderTable);
+document.getElementById('chips').addEventListener('click', e=>{
+  const chip = e.target.closest('.chip');
+  if(!chip) return;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  currentFilter = chip.dataset.filter;
+  renderTable();
+});
+document.getElementById('accountFilter').addEventListener('change', e=>{
+  currentAccount = e.target.value;
+  renderStats();
+  renderTable();
+});
+
+document.getElementById('exportCsvBtn').addEventListener('click', ()=>{
+  const q = document.getElementById('searchBox').value.trim();
+  const filtered = sortRows(zonesData.filter(z => matchesFilter(z, currentFilter) && matchesSearch(z, q) && matchesAccount(z, currentAccount)));
+  const header = ['Domain','Account','Group','index.html HTTP','first_root','Root HTTP','Expires','Days Remaining','Campaigns'];
+  const csvEsc = v => `"${String(v??'').replace(/"/g,'""')}"`;
+  const lines = [header.map(csvEsc).join(',')];
+  filtered.forEach(z=>{
+    lines.push([
+      z.zone,
+      z.accountLabel || '',
+      z.group || '',
+      z.checked ? (z.indexError ? 'error' : z.indexCode) : 'checking',
+      z.checked ? (z.firstRootError ? 'error' : z.firstRootCode) : 'checking',
+      z.checked ? (z.rootError ? 'error' : z.rootCode) : 'checking',
+      z.expiryDate ? z.expiryDate.slice(0,10) : '',
+      z.daysRemaining ?? '',
+      z.campaignsCount ?? '',
+    ].map(csvEsc).join(','));
+  });
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `untracked_zones_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+});
+
+async function loadInto(token){
+  setLoading(true);
+  try{
+    const data = await fetchZones(token);
+    zonesData = data.zones.map(z => ({ ...z, indexCode: null, indexError: null, rootCode: null, rootError: null, checked: false }));
+    totalZones = data.totalZones || 0;
+    totalZonesByAccount = data.totalZonesByAccount || {};
+    document.getElementById('rangeLabel').textContent = `Cloudflare zones with no matching record in keitaro_domain / keitaro_domain_media · updated ${new Date(data.generatedAt).toLocaleString()}`;
+    renderAll();
+  } finally {
+    setLoading(false);
+  }
+  runHttpChecks(token);
+}
+
+document.getElementById('refreshBtn').addEventListener('click', ()=>{
+  const token = localStorage.getItem(TOKEN_KEY);
+  if(token) loadInto(token);
+});
+
+function showApp(){
+  document.getElementById('loginView').classList.add('hidden');
+  document.getElementById('appView').classList.remove('hidden');
+}
+function showLogin(){
+  document.getElementById('loginView').classList.remove('hidden');
+  document.getElementById('appView').classList.add('hidden');
+}
+function clearSession(){
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(TOKEN_EXPIRY_KEY);
+}
+
+async function loginWithPassword(password){
+  document.getElementById('loginError').textContent = '';
+  try{
+    await loadInto(password);
+    localStorage.setItem(TOKEN_KEY, password);
+    localStorage.setItem(TOKEN_EXPIRY_KEY, String(Date.now() + REMEMBER_MS));
+    showApp();
+  } catch {
+    clearSession();
+    document.getElementById('loginError').textContent = 'Incorrect password.';
+  }
+}
+
+async function resumeSession(token){
+  showApp();
+  try{
+    await loadInto(token);
+  } catch(err){
+    if(err && err.message === 'REQUEST_FAILED_401'){
+      clearSession();
+      showLogin();
+      document.getElementById('loginError').textContent = 'Your session expired, please log in again.';
+    } else {
+      document.getElementById('rangeLabel').textContent = 'Error loading data — try refreshing the page';
+    }
+  }
+}
+
+document.getElementById('loginForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  loginWithPassword(document.getElementById('password').value);
+});
+document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  clearSession();
+  location.reload();
+});
+
+const savedToken = localStorage.getItem(TOKEN_KEY);
+const savedExpiry = Number(localStorage.getItem(TOKEN_EXPIRY_KEY) || 0);
+if(savedToken && Date.now() < savedExpiry){
+  resumeSession(savedToken);
+} else {
+  clearSession();
+}
+</script>
+</body>
+</html>

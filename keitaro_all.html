@@ -1,0 +1,875 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Keitaro Clicks Dashboard</title>
+<style>
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f5f7fb;color:#172033;overflow-x:hidden}
+.wrap{max-width:1180px;margin:auto;padding:24px 14px 40px}
+h1{margin:0 0 6px;font-size:28px}.sub{color:#6b7280;margin-bottom:18px}
+.topbar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+.nav{display:flex;gap:10px;margin-bottom:18px}
+.nav a{color:#172033;text-decoration:none;font-size:14px;padding:9px 14px;border-radius:10px;border:1px solid #d1d5db;background:#fff;cursor:pointer;-webkit-tap-highlight-color:rgba(17,24,39,.15);touch-action:manipulation}
+.nav a:hover{border-color:#9ca3af}
+.nav a:active{background:#f3f4f6}
+.nav a.active{background:#111827;color:#fff;border-color:#111827}
+.nav a.active:hover{border-color:#111827}
+.nav a.active:active{background:#1f2937}
+.login{max-width:420px;margin:12vh auto 0;background:#fff;border:1px solid #e5e7eb;border-radius:20px;padding:26px;box-shadow:0 12px 32px rgba(17,24,39,.08)}
+.login h1{font-size:26px;margin-bottom:8px}.login p{color:#6b7280;margin-top:0}
+input{padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;font-size:15px;direction:ltr;box-sizing:border-box;max-width:100%}
+input[type=password]{width:100%}
+button{border:0;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;cursor:pointer}
+.primary{width:100%;margin-top:12px;background:#111827;color:#fff}
+.logout{background:#fff;border:1px solid #d1d5db}
+.error{color:#b91c1c;margin-top:10px;font-size:14px;min-height:20px}
+.hidden{display:none}
+.updating-badge{font-size:12px;color:#6b7280;font-weight:600}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.filters button{background:#fff;border:1px solid #d1d5db;color:#172033}
+.filters button.active{background:#111827;color:#fff;border-color:#111827}
+.filters .range{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.filters .range[hidden]{display:none}
+.filters input[type=date]{min-width:0;flex:1 1 128px}
+#entityFilters input[type=text]{flex:1 1 150px;min-width:0}
+#rangeSelect{background:#fff;border:1px solid #d1d5db;color:#172033;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;cursor:pointer;min-width:160px}
+.loading-overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;gap:12px;flex-direction:column;background:rgba(245,247,251,.72);z-index:50;opacity:0;pointer-events:none;transition:opacity .15s}
+.loading-overlay.active{opacity:1;pointer-events:auto}
+.progress-bar-track{width:220px;height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden}
+.progress-bar-fill{height:100%;width:0%;background:#111827;border-radius:999px;transition:width .2s linear}
+.loading-overlay span{font-size:14px;color:#6b7280;font-weight:600}
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px;margin-bottom:20px}
+.kpi{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:16px 18px;box-shadow:0 8px 24px rgba(17,24,39,.06)}
+.kpi .label{font-size:13px;color:#6b7280;margin-bottom:6px}
+.kpi .value{font-size:26px;font-weight:700}
+.panel{background:#fff;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;box-shadow:0 8px 24px rgba(17,24,39,.06);margin-bottom:20px}
+.panel h2{margin:0;padding:15px 18px;font-size:17px;background:#111827;color:#fff}
+.panel .body{padding:16px 18px}
+.chart{width:100%;height:220px;display:block}
+.chart-toggle{display:flex;gap:18px;margin-bottom:12px;font-size:14px}
+.chart-toggle label{display:flex;align-items:center;gap:6px;cursor:pointer}
+.chart-toggle .swatch{width:12px;height:12px;border-radius:3px;display:inline-block}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px 12px;border-bottom:1px solid #e5e7eb;text-align:left;font-size:14px}
+th{background:#fafafa;font-weight:600}
+th.sortable{cursor:pointer;user-select:none}
+th.sortable:hover{background:#f0f1f3}
+th .arrow{font-size:10px;margin-left:4px;color:#9ca3af}
+.table-footer{padding:10px 18px 0}
+.table-footer button{background:#fff;border:1px solid #d1d5db;color:#374151;font-size:12px;padding:6px 12px;font-weight:600}
+.table-footer button:hover{border-color:#9ca3af}
+tr:last-child td{border-bottom:none}
+.grid2{display:grid;grid-template-columns:1fr;gap:20px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-bottom:20px}
+.pie-body{display:flex;flex-direction:column;align-items:center;gap:14px}
+.pie{width:150px;height:150px}
+.pie-legend{width:100%;font-size:13px}
+.pie-legend-row{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #f3f4f6}
+.pie-legend-row:last-child{border-bottom:none}
+.pie-legend-row .swatch{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.pie-legend-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pie-legend-val{color:#6b7280;white-space:nowrap}
+.muted{color:#6b7280}
+.rate-good{color:#059669;font-weight:700}
+.rate-bad{color:#dc2626;font-weight:700}
+.legend-note{font-size:12px;color:#6b7280;margin:-10px 0 14px}
+#content{transition:opacity .15s}
+@media(max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.grid3{grid-template-columns:1fr}}
+@media(max-width:560px){.kpis{grid-template-columns:1fr}.login{margin:8vh 12px 0}}
+</style>
+</head>
+<body>
+<section id="loginView" class="login">
+  <h1>Clicks Dashboard</h1>
+  <p>Enter the password to view Keitaro click data.</p>
+  <form id="loginForm">
+    <input id="password" type="password" autocomplete="current-password" placeholder="Password" required>
+    <button class="primary" type="submit">Login</button>
+    <div id="loginError" class="error"></div>
+  </form>
+</section>
+
+<div id="loadingOverlay" class="loading-overlay"><div class="progress-bar-track"><div class="progress-bar-fill" id="progressFill"></div></div><span id="progressPct">Loading… 0%</span></div>
+
+<main id="appView" class="wrap hidden">
+  <div class="topbar">
+    <div><h1>Keitaro Clicks Dashboard</h1><div class="sub" id="rangeLabel"></div></div>
+    <span id="updatingBadge" class="updating-badge hidden">Updating…</span>
+    <button id="refreshBtn" class="logout" type="button">↻ Refresh</button>
+    <button id="logoutBtn" class="logout">Logout</button>
+  </div>
+
+    <div class="nav">
+    <a href="keitaro_all.html" class="active">Dashboard</a>
+    <a href="chat_all.html">Chat</a>
+  </div>
+
+  <div class="filters" id="filters">
+    <select id="rangeSelect">
+      <option value="range:1">Today</option>
+      <option value="range:7" selected>Last 7 Days</option>
+      <option value="range:30">Last 30 Days</option>
+      <option value="range:90">Last 90 Days</option>
+      <option value="preset:yesterday">Yesterday</option>
+      <option value="preset:lastweek">Last Week</option>
+      <option value="preset:lastmonth">Last Month</option>
+      <option value="custom">Custom Range…</option>
+    </select>
+    <div class="range" id="customRange" hidden>
+      <input type="date" id="fromInput">
+      <span>to</span>
+      <input type="date" id="toInput">
+      <button id="applyRange">Apply</button>
+    </div>
+  </div>
+
+  <div class="filters" id="entityFilters">
+    <input type="text" id="filterCampaign" list="campaignOptions" placeholder="Filter by campaign">
+    <datalist id="campaignOptions"></datalist>
+    <input type="text" id="filterGroup" list="groupOptions" placeholder="Filter by group">
+    <datalist id="groupOptions"></datalist>
+    <input type="text" id="filterCountry" list="countryOptions" placeholder="Filter by country">
+    <datalist id="countryOptions"></datalist>
+    <button id="clearFilters" class="logout">Clear Filters</button>
+  </div>
+
+  <div id="content">
+    <div class="kpis">
+      <div class="kpi"><div class="label">Total Clicks</div><div class="value" id="kpiClicks">-</div></div>
+      <div class="kpi"><div class="label">Unique Clicks</div><div class="value" id="kpiUnique">-</div></div>
+      <div class="kpi"><div class="label">Total Reg</div><div class="value" id="kpiReg">-</div></div>
+      <div class="kpi"><div class="label">Total FTD</div><div class="value" id="kpiFtd">-</div></div>
+      <div class="kpi"><div class="label">Active Campaigns</div><div class="value" id="kpiCampaigns">-</div></div>
+      <div class="kpi"><div class="label">Date Range</div><div class="value" id="kpiRange" style="font-size:16px">-</div></div>
+    </div>
+
+    <div class="panel">
+      <h2>Clicks Over Time</h2>
+      <div class="body">
+        <div class="chart-toggle">
+          <label><input type="checkbox" id="toggleClicks" checked><span class="swatch" style="background:#111827"></span>Clicks</label>
+          <label><input type="checkbox" id="toggleUnique" checked><span class="swatch" style="background:#2563eb"></span>Unique Clicks</label>
+          <label><input type="checkbox" id="toggleReg" checked><span class="swatch" style="background:#059669"></span>Reg</label>
+          <label><input type="checkbox" id="toggleFtd" checked><span class="swatch" style="background:#dc2626"></span>FTD</label>
+        </div>
+        <svg id="chart" class="chart" viewBox="0 0 1000 220" preserveAspectRatio="none"></svg>
+      </div>
+    </div>
+
+    <div class="grid3">
+      <div class="panel">
+        <h2>Distribution by Country</h2>
+        <div class="body pie-body">
+          <svg id="pieCountry" class="pie" viewBox="0 0 120 120"></svg>
+          <div id="legendCountry" class="pie-legend"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Distribution by Campaign</h2>
+        <div class="body pie-body">
+          <svg id="pieCampaign" class="pie" viewBox="0 0 120 120"></svg>
+          <div id="legendCampaign" class="pie-legend"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Distribution by Group</h2>
+        <div class="body pie-body">
+          <svg id="pieGroup" class="pie" viewBox="0 0 120 120"></svg>
+          <div id="legendGroup" class="pie-legend"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="legend-note">Green = at or above the overall average rate · Red = below average</div>
+
+    <div class="grid2">
+      <div class="panel">
+        <h2>By Campaign</h2>
+        <div class="body"><table><thead><tr>
+          <th class="sortable" data-table="campaign" data-sort="key" data-label="Campaign">Campaign</th>
+          <th class="sortable" data-table="campaign" data-sort="clicks" data-label="Clicks">Clicks</th>
+          <th class="sortable" data-table="campaign" data-sort="unique_clicks" data-label="Unique">Unique</th>
+          <th class="sortable" data-table="campaign" data-sort="regs" data-label="Reg">Reg</th>
+          <th class="sortable" data-table="campaign" data-sort="ftds" data-label="FTD">FTD</th>
+          <th class="sortable" data-table="campaign" data-sort="click2reg" data-label="Click → Reg">Click → Reg</th>
+          <th class="sortable" data-table="campaign" data-sort="click2ftd" data-label="Click → FTD">Click → FTD</th>
+          <th class="sortable" data-table="campaign" data-sort="reg2ftd" data-label="Reg → FTD">Reg → FTD</th>
+        </tr></thead><tbody id="tblCampaign"></tbody></table><div class="table-footer" id="tblCampaignFooter"></div></div>
+      </div>
+      <div class="panel">
+        <h2>By Flow</h2>
+        <div class="body"><table><thead><tr>
+          <th class="sortable" data-table="flow" data-sort="key" data-label="Flow">Flow</th>
+          <th class="sortable" data-table="flow" data-sort="clicks" data-label="Clicks">Clicks</th>
+          <th class="sortable" data-table="flow" data-sort="unique_clicks" data-label="Unique">Unique</th>
+          <th class="sortable" data-table="flow" data-sort="regs" data-label="Reg">Reg</th>
+          <th class="sortable" data-table="flow" data-sort="ftds" data-label="FTD">FTD</th>
+          <th class="sortable" data-table="flow" data-sort="click2reg" data-label="Click → Reg">Click → Reg</th>
+          <th class="sortable" data-table="flow" data-sort="click2ftd" data-label="Click → FTD">Click → FTD</th>
+          <th class="sortable" data-table="flow" data-sort="reg2ftd" data-label="Reg → FTD">Reg → FTD</th>
+        </tr></thead><tbody id="tblFlow"></tbody></table><div class="table-footer" id="tblFlowFooter"></div></div>
+      </div>
+      <div class="panel">
+        <h2>By Group (Brand)</h2>
+        <div class="body"><table><thead><tr>
+          <th class="sortable" data-table="group" data-sort="key" data-label="Group">Group</th>
+          <th class="sortable" data-table="group" data-sort="clicks" data-label="Clicks">Clicks</th>
+          <th class="sortable" data-table="group" data-sort="unique_clicks" data-label="Unique">Unique</th>
+          <th class="sortable" data-table="group" data-sort="regs" data-label="Reg">Reg</th>
+          <th class="sortable" data-table="group" data-sort="ftds" data-label="FTD">FTD</th>
+          <th class="sortable" data-table="group" data-sort="click2reg" data-label="Click → Reg">Click → Reg</th>
+          <th class="sortable" data-table="group" data-sort="click2ftd" data-label="Click → FTD">Click → FTD</th>
+          <th class="sortable" data-table="group" data-sort="reg2ftd" data-label="Reg → FTD">Reg → FTD</th>
+        </tr></thead><tbody id="tblGroup"></tbody></table><div class="table-footer" id="tblGroupFooter"></div></div>
+      </div>
+      <div class="panel">
+        <h2>By Country</h2>
+        <div class="body"><table><thead><tr>
+          <th class="sortable" data-table="country" data-sort="key" data-label="Country">Country</th>
+          <th class="sortable" data-table="country" data-sort="clicks" data-label="Clicks">Clicks</th>
+          <th class="sortable" data-table="country" data-sort="unique_clicks" data-label="Unique">Unique</th>
+          <th class="sortable" data-table="country" data-sort="regs" data-label="Reg">Reg</th>
+          <th class="sortable" data-table="country" data-sort="ftds" data-label="FTD">FTD</th>
+          <th class="sortable" data-table="country" data-sort="click2reg" data-label="Click → Reg">Click → Reg</th>
+          <th class="sortable" data-table="country" data-sort="click2ftd" data-label="Click → FTD">Click → FTD</th>
+          <th class="sortable" data-table="country" data-sort="reg2ftd" data-label="Reg → FTD">Reg → FTD</th>
+        </tr></thead><tbody id="tblCountry"></tbody></table><div class="table-footer" id="tblCountryFooter"></div></div>
+      </div>
+      <div class="panel">
+        <h2>By Offer</h2>
+        <div class="body"><table><thead><tr>
+          <th class="sortable" data-table="offer" data-sort="key" data-label="Offer">Offer</th>
+          <th class="sortable" data-table="offer" data-sort="clicks" data-label="Clicks">Clicks</th>
+          <th class="sortable" data-table="offer" data-sort="unique_clicks" data-label="Unique">Unique</th>
+          <th class="sortable" data-table="offer" data-sort="regs" data-label="Reg">Reg</th>
+          <th class="sortable" data-table="offer" data-sort="ftds" data-label="FTD">FTD</th>
+          <th class="sortable" data-table="offer" data-sort="click2reg" data-label="Click → Reg">Click → Reg</th>
+          <th class="sortable" data-table="offer" data-sort="click2ftd" data-label="Click → FTD">Click → FTD</th>
+          <th class="sortable" data-table="offer" data-sort="reg2ftd" data-label="Reg → FTD">Reg → FTD</th>
+        </tr></thead><tbody id="tblOffer"></tbody></table><div class="table-footer" id="tblOfferFooter"></div></div>
+      </div>
+      <div class="panel">
+        <h2>By Brand</h2>
+        <div class="body"><table><thead><tr>
+          <th class="sortable" data-table="brand" data-sort="key" data-label="Brand">Brand</th>
+          <th class="sortable" data-table="brand" data-sort="clicks" data-label="Clicks">Clicks</th>
+          <th class="sortable" data-table="brand" data-sort="unique_clicks" data-label="Unique">Unique</th>
+          <th class="sortable" data-table="brand" data-sort="regs" data-label="Reg">Reg</th>
+          <th class="sortable" data-table="brand" data-sort="ftds" data-label="FTD">FTD</th>
+          <th class="sortable" data-table="brand" data-sort="click2reg" data-label="Click → Reg">Click → Reg</th>
+          <th class="sortable" data-table="brand" data-sort="click2ftd" data-label="Click → FTD">Click → FTD</th>
+          <th class="sortable" data-table="brand" data-sort="reg2ftd" data-label="Reg → FTD">Reg → FTD</th>
+        </tr></thead><tbody id="tblBrand"></tbody></table><div class="table-footer" id="tblBrandFooter"></div></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+const API_BASE = ""; // same-origin deployment (Vercel). If hosted elsewhere, set e.g. "https://your-app.vercel.app"
+const TOKEN_KEY = "all_dashboard_token";
+const TOKEN_EXPIRY_KEY = "all_dashboard_token_expiry";
+const EXPECTED_SCOPE = "all";
+const REMEMBER_MS = 7 * 24 * 60 * 60 * 1000;
+
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function fmt(n){return Number(n||0).toLocaleString('en-US');}
+function toISO(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+
+const CACHE_PREFIX = 'all_cache_';
+function todayKey(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function getCached(key){
+  try{
+    const raw = localStorage.getItem(CACHE_PREFIX + key);
+    if(!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed.day === todayKey() ? parsed.data : null;
+  }catch{ return null; }
+}
+// Like getCached, but also returns data from a previous day (marked not-fresh) so the
+// page can render instantly from last-known data while fresh data loads in the background,
+// instead of blocking on a full page load every time the daily cache expires.
+function peekCached(key){
+  try{
+    const raw = localStorage.getItem(CACHE_PREFIX + key);
+    if(!raw) return null;
+    const parsed = JSON.parse(raw);
+    return { data: parsed.data, fresh: parsed.day === todayKey() };
+  }catch{ return null; }
+}
+function purgeStaleCache(){
+  // Keep a few days of history (instead of wiping anything not from today) so a stale
+  // entry is still available for the instant-render-then-refresh flow above.
+  const cutoff = Date.now() - 3*86400000;
+  for(let i = localStorage.length - 1; i >= 0; i--){
+    const k = localStorage.key(i);
+    if(!k || !k.startsWith(CACHE_PREFIX)) continue;
+    try{
+      const day = JSON.parse(localStorage.getItem(k)).day;
+      if(new Date(day + 'T00:00:00').getTime() < cutoff) localStorage.removeItem(k);
+    }catch{ localStorage.removeItem(k); }
+  }
+}
+function setCached(key, data){
+  try{
+    localStorage.setItem(CACHE_PREFIX + key, JSON.stringify({ day: todayKey(), data }));
+    purgeStaleCache();
+  }catch{}
+}
+
+// Data in the DB only updates once a day (always current through yesterday), so cache
+// each unique query for the rest of the calendar day instead of re-hitting MySQL on every reload.
+async function apiFetch(from, to, token, filters){
+  const params = new URLSearchParams({ from, to, ...(filters||{}) });
+  const url = `${API_BASE}/api/keitaro?${params.toString()}`;
+  const cached = getCached(url);
+  if(cached) return cached;
+  const res = await fetch(url, { headers: { 'x-api-token': token } });
+  if(!res.ok) throw new Error('REQUEST_FAILED_' + res.status);
+  const data = await res.json();
+  if(data.scope !== EXPECTED_SCOPE) throw new Error('REQUEST_FAILED_401');
+  setCached(url, data);
+  return data;
+}
+
+async function apiFetchRegFtd(from, to, token, filters){
+  // Reg/FTD now sourced from keitaro_conversions_report (see keitaro-mbm.html rollout).
+  const params = new URLSearchParams({ from, to, source: 'report', ...(filters||{}) });
+  const url = `${API_BASE}/api/keitaro-regftd?${params.toString()}`;
+  const cached = getCached(url);
+  if(cached) return cached;
+  const res = await fetch(url, { headers: { 'x-api-token': token } });
+  if(!res.ok) throw new Error('REQUEST_FAILED_' + res.status);
+  const data = await res.json();
+  if(data.scope !== EXPECTED_SCOPE) throw new Error('REQUEST_FAILED_401');
+  setCached(url, data);
+  return data;
+}
+
+function mergeByDate(clicksByDate, regFtdByDate){
+  const map = new Map(clicksByDate.map(r=>[r.date, { date: r.date, clicks: Number(r.clicks)||0, unique_clicks: Number(r.unique_clicks)||0, regs: 0, ftds: 0 }]));
+  regFtdByDate.forEach(r=>{
+    const row = map.get(r.date) || { date: r.date, clicks: 0, unique_clicks: 0, regs: 0, ftds: 0 };
+    row.regs = Number(r.regs)||0;
+    row.ftds = Number(r.ftds)||0;
+    map.set(r.date, row);
+  });
+  return Array.from(map.values()).sort((a,b)=> a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+}
+
+let filterOptions = { campaigns: [], groups: [], countries: [] };
+
+async function loadFilterOptions(token){
+  const url = `${API_BASE}/api/keitaro-filters`;
+  const cached = getCached(url);
+  if(cached){
+    filterOptions = cached;
+    fillDatalist('campaignOptions', filterOptions.campaigns);
+    fillDatalist('groupOptions', filterOptions.groups);
+    fillDatalist('countryOptions', filterOptions.countries);
+    return;
+  }
+  try{
+    const res = await fetch(url, { headers: { 'x-api-token': token } });
+    if(!res.ok) return;
+    filterOptions = await res.json();
+    setCached(url, filterOptions);
+    fillDatalist('campaignOptions', filterOptions.campaigns);
+    fillDatalist('groupOptions', filterOptions.groups);
+    fillDatalist('countryOptions', filterOptions.countries);
+  }catch{}
+}
+
+function fillDatalist(id, values){
+  document.getElementById(id).innerHTML = values.map(v=>`<option value="${esc(v)}"></option>`).join('');
+}
+
+function currentFilters(){
+  const campaign = document.getElementById('filterCampaign').value.trim();
+  const group = document.getElementById('filterGroup').value.trim();
+  const country = document.getElementById('filterCountry').value.trim();
+  const filters = {};
+  if(campaign && filterOptions.campaigns.includes(campaign)) filters.campaignName = campaign;
+  if(group && filterOptions.groups.includes(group)) filters.groupName = group;
+  if(country && filterOptions.countries.includes(country)) filters.countryCode = country;
+  return filters;
+}
+
+let lastByDate = [];
+const CHART_SERIES = [
+  { key: 'clicks', color: '#111827', label: 'Clicks', toggleId: 'toggleClicks' },
+  { key: 'unique_clicks', color: '#2563eb', label: 'Unique Clicks', toggleId: 'toggleUnique' },
+  { key: 'regs', color: '#059669', label: 'Reg', toggleId: 'toggleReg' },
+  { key: 'ftds', color: '#dc2626', label: 'FTD', toggleId: 'toggleFtd' },
+];
+
+function renderChart(byDate){
+  if(byDate) lastByDate = byDate;
+  const svg = document.getElementById('chart');
+  const w=1000, h=220, padL=55, padR=15, padT=15, padB=30;
+  svg.innerHTML = '';
+  if(!lastByDate.length) return;
+
+  const series = CHART_SERIES.filter(s => document.getElementById(s.toggleId).checked);
+  if(!series.length) return;
+
+  const innerW = w - padL - padR, innerH = h - padT - padB;
+  const max = Math.max(...lastByDate.flatMap(d => series.map(s => Number(d[s.key])||0)), 1);
+  const stepX = lastByDate.length > 1 ? innerW / (lastByDate.length - 1) : 0;
+  const xAt = i => padL + i*stepX;
+  const yAt = v => padT + innerH - (v/max)*innerH;
+
+  let grid = '';
+  for(let g=0; g<=4; g++){
+    const y = padT + innerH*g/4;
+    const val = Math.round(max*(1-g/4));
+    grid += `<line x1="${padL}" y1="${y}" x2="${w-padR}" y2="${y}" stroke="#e5e7eb" stroke-width="1"/>`;
+    grid += `<text x="${padL-8}" y="${y+4}" font-size="10" fill="#6b7280" text-anchor="end">${fmt(val)}</text>`;
+  }
+
+  const paths = series.map(s=>{
+    const pts = lastByDate.map((d,i)=>`${xAt(i)},${yAt(Number(d[s.key])||0)}`).join(' ');
+    const dots = lastByDate.map((d,i)=>{
+      const v = Number(d[s.key])||0;
+      return `<circle cx="${xAt(i)}" cy="${yAt(v)}" r="2.5" fill="${s.color}"><title>${esc(d.date)} - ${s.label}: ${fmt(v)}</title></circle>`;
+    }).join('');
+    return `<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2"/>${dots}`;
+  }).join('');
+
+  const labelStep = Math.max(1, Math.ceil(lastByDate.length / 8));
+  const labels = lastByDate.map((d,i)=>{
+    if(i % labelStep !== 0) return '';
+    return `<text x="${xAt(i)}" y="${h-8}" font-size="10" fill="#6b7280" text-anchor="middle">${esc(String(d.date).slice(5))}</text>`;
+  }).join('');
+
+  svg.innerHTML = grid + paths + labels;
+}
+
+document.getElementById('toggleClicks').addEventListener('change', ()=> renderChart());
+document.getElementById('toggleUnique').addEventListener('change', ()=> renderChart());
+document.getElementById('toggleReg').addEventListener('change', ()=> renderChart());
+document.getElementById('toggleFtd').addEventListener('change', ()=> renderChart());
+
+const PIE_COLORS = ['#111827','#2563eb','#059669','#d97706','#dc2626','#7c3aed','#0891b2','#be185d'];
+
+function renderPie(svgId, legendId, rows, total, labelFn){
+  const svg = document.getElementById(svgId);
+  const legend = document.getElementById(legendId);
+  svg.innerHTML = '';
+  if(!rows.length || !total){ legend.innerHTML = '<div class="muted">No data</div>'; return; }
+
+  const top = rows.slice(0, 6);
+  const topSum = top.reduce((s,r)=>s+Number(r.clicks||0), 0);
+  const other = Math.max(total - topSum, 0);
+  const slices = top.map((r,i)=>({ label: labelFn(r), value: Number(r.clicks||0), color: PIE_COLORS[i % PIE_COLORS.length] }));
+  if(other > 0) slices.push({ label: 'Other', value: other, color: '#9ca3af' });
+
+  const r=50, cx=60, cy=60, circ=2*Math.PI*r;
+  let offset = 0;
+  svg.innerHTML = slices.map(s=>{
+    const frac = s.value/total;
+    const dash = frac*circ;
+    const circle = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.color}" stroke-width="20" stroke-dasharray="${dash} ${circ-dash}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${cx} ${cy})"><title>${esc(s.label)}: ${fmt(s.value)} (${(frac*100).toFixed(1)}%)</title></circle>`;
+    offset += dash;
+    return circle;
+  }).join('');
+
+  legend.innerHTML = slices.map(s=>{
+    const pct = ((s.value/total)*100).toFixed(1);
+    return `<div class="pie-legend-row"><span class="swatch" style="background:${s.color}"></span><span class="pie-legend-label">${esc(s.label)}</span><span class="pie-legend-val">${fmt(s.value)} (${pct}%)</span></div>`;
+  }).join('');
+}
+
+function pct(n){ return Number(n||0).toFixed(1) + '%'; }
+
+function withRates(rows){
+  return rows.map(r=>({
+    ...r,
+    click2reg: r.clicks ? r.regs/r.clicks*100 : 0,
+    click2ftd: r.clicks ? r.ftds/r.clicks*100 : 0,
+    reg2ftd: r.regs ? r.ftds/r.regs*100 : 0,
+  }));
+}
+
+const ROWS_PER_TABLE = 10;
+const tableExpanded = { campaign:false, flow:false, group:false, country:false, offer:false, brand:false };
+
+function renderTableFooter(tableKey, totalRows){
+  const footer = document.getElementById(`tbl${tableKey[0].toUpperCase()}${tableKey.slice(1)}Footer`);
+  if(!footer) return;
+  if(totalRows <= ROWS_PER_TABLE){ footer.innerHTML = ''; return; }
+  const expanded = tableExpanded[tableKey];
+  footer.innerHTML = `<button type="button" data-expand-table="${tableKey}">${expanded ? 'Show Less' : `Show All (${fmt(totalRows)})`}</button>`;
+}
+
+document.getElementById('content').addEventListener('click', e=>{
+  const btn = e.target.closest('button[data-expand-table]');
+  if(!btn) return;
+  const key = btn.dataset.expandTable;
+  tableExpanded[key] = !tableExpanded[key];
+  if(lastData && lastRegFtdData) renderAll(lastData, lastRegFtdData);
+});
+
+function rateClass(value, avg){
+  return value >= avg ? 'rate-good' : 'rate-bad';
+}
+
+function renderTable(id, tableKey, rows, labelFn, linkFn, avg){
+  const tbody = document.getElementById(id);
+  if(!rows.length){ tbody.innerHTML = `<tr><td colspan="8" class="muted">No data</td></tr>`; renderTableFooter(tableKey, 0); return; }
+  const visibleRows = tableExpanded[tableKey] ? rows : rows.slice(0, ROWS_PER_TABLE);
+  tbody.innerHTML = visibleRows.map(r=>{
+    const label = esc(labelFn(r));
+    const href = linkFn ? linkFn(r) : null;
+    const nameCell = href ? `<a href="${esc(href)}" target="_blank" rel="noopener noreferrer">${label}</a>` : label;
+    return `<tr><td>${nameCell}</td><td>${fmt(r.clicks)}</td><td>${fmt(r.unique_clicks)}</td><td>${fmt(r.regs)}</td><td>${fmt(r.ftds)}</td><td class="${rateClass(r.click2reg, avg.click2reg)}">${pct(r.click2reg)}</td><td class="${rateClass(r.click2ftd, avg.click2ftd)}">${pct(r.click2ftd)}</td><td class="${rateClass(r.reg2ftd, avg.reg2ftd)}">${pct(r.reg2ftd)}</td></tr>`;
+  }).join('');
+  renderTableFooter(tableKey, rows.length);
+}
+
+function mergeRows(clicksRows, regFtdRows, keyField, nameField){
+  const map = new Map();
+  (clicksRows||[]).forEach(r=>{
+    const key = r[keyField]==null ? 'null' : String(r[keyField]);
+    map.set(key, { ...r, clicks: Number(r.clicks)||0, unique_clicks: Number(r.unique_clicks)||0, regs: 0, ftds: 0 });
+  });
+  (regFtdRows||[]).forEach(r=>{
+    const key = r[keyField]==null ? 'null' : String(r[keyField]);
+    let row = map.get(key);
+    if(!row){ row = { [keyField]: r[keyField], clicks: 0, unique_clicks: 0, regs: 0, ftds: 0 }; map.set(key, row); }
+    row.regs = Number(r.regs)||0;
+    row.ftds = Number(r.ftds)||0;
+    if(nameField && r[nameField] && !row[nameField]) row[nameField] = r[nameField];
+  });
+  return Array.from(map.values());
+}
+
+const tableSort = {
+  campaign: { key: 'clicks', dir: 'desc' },
+  flow: { key: 'clicks', dir: 'desc' },
+  group: { key: 'clicks', dir: 'desc' },
+  country: { key: 'clicks', dir: 'desc' },
+  offer: { key: 'clicks', dir: 'desc' },
+  brand: { key: 'clicks', dir: 'desc' },
+};
+
+function sortRows(rows, sort, keyFn){
+  const { key, dir } = sort;
+  const mul = dir === 'asc' ? 1 : -1;
+  return [...rows].sort((a,b)=>{
+    let av, bv;
+    if(key === 'key'){ av = String(keyFn(a)).toLowerCase(); bv = String(keyFn(b)).toLowerCase(); }
+    else { av = a[key]; bv = b[key]; }
+    if(av < bv) return -1*mul;
+    if(av > bv) return 1*mul;
+    return 0;
+  });
+}
+
+function renderTableHeaders(){
+  document.querySelectorAll('th.sortable').forEach(th=>{
+    const table = th.dataset.table, sortKey = th.dataset.sort, label = th.dataset.label;
+    const active = tableSort[table] && tableSort[table].key === sortKey;
+    const arrow = active ? (tableSort[table].dir === 'asc' ? '▲' : '▼') : '';
+    th.innerHTML = `${esc(label)}${arrow ? ` <span class="arrow">${arrow}</span>` : ''}`;
+  });
+}
+
+document.querySelectorAll('th.sortable').forEach(th=>{
+  th.addEventListener('click', ()=>{
+    const table = th.dataset.table, sortKey = th.dataset.sort;
+    const cur = tableSort[table];
+    if(cur.key === sortKey){ cur.dir = cur.dir === 'asc' ? 'desc' : 'asc'; }
+    else { cur.key = sortKey; cur.dir = sortKey === 'key' ? 'asc' : 'desc'; }
+    if(lastData && lastRegFtdData) renderAll(lastData, lastRegFtdData);
+  });
+});
+
+let lastData = null, lastRegFtdData = null;
+
+function renderAll(data, regFtdData){
+  lastData = data; lastRegFtdData = regFtdData;
+  document.getElementById('kpiClicks').textContent = fmt(data.totals.clicks);
+  document.getElementById('kpiUnique').textContent = fmt(data.totals.unique_clicks);
+  document.getElementById('kpiReg').textContent = fmt(regFtdData.totals.regs);
+  document.getElementById('kpiFtd').textContent = fmt(regFtdData.totals.ftds);
+  document.getElementById('kpiCampaigns').textContent = fmt(data.totals.campaigns);
+  document.getElementById('kpiRange').textContent = `${data.from} – ${data.to}`;
+  document.getElementById('rangeLabel').textContent = `${data.from} to ${data.to}`;
+
+  renderChart(mergeByDate(data.byDate, regFtdData.byDate));
+
+  const total = Number(data.totals.clicks)||0;
+  const totalRegs = Number(regFtdData.totals.regs)||0;
+  const totalFtds = Number(regFtdData.totals.ftds)||0;
+  const overallAvg = {
+    click2reg: total ? totalRegs/total*100 : 0,
+    click2ftd: total ? totalFtds/total*100 : 0,
+    reg2ftd: totalRegs ? totalFtds/totalRegs*100 : 0,
+  };
+  renderPie('pieCountry', 'legendCountry', data.byCountry, total, r => r.country_code || 'Unknown');
+  renderPie('pieCampaign', 'legendCampaign', data.byCampaign, total, r => r.campaign_name || `#${r.campaign_id}`);
+  renderPie('pieGroup', 'legendGroup', data.byGroup, total, r => r.group_name || (r.campaign_group_id ? `#${r.campaign_group_id}` : 'No Group'));
+
+  const campaignKey = r => r.campaign_name || `#${r.campaign_id}`;
+  const flowKey = r => r.flow_name || (r.flow_id ? `Flow #${r.flow_id}` : 'No Flow');
+  const groupKey = r => r.group_name || (r.campaign_group_id ? `#${r.campaign_group_id}` : 'No Group');
+  const countryKey = r => r.country_code || 'Unknown';
+  const offerKey = r => r.offer_name || (r.offer_id ? `#${r.offer_id}` : 'No Offer');
+  const brandKey = r => r.brand_name || (r.brand_id ? `Brand #${r.brand_id}` : 'No Brand');
+  const campaignLink = r => r.campaign_id ? `https://amzgamez.com/admin/#!/campaigns/${r.campaign_id}` : null;
+
+  const campaignRows = withRates(mergeRows(data.byCampaign, regFtdData.byCampaign, 'campaign_id', 'campaign_name'));
+  const flowRows = withRates(mergeRows(data.byFlow, regFtdData.byFlow, 'flow_id', 'flow_name'));
+  const groupRows = withRates(mergeRows(data.byGroup, (regFtdData.byGroup||[]).map(r=>({ campaign_group_id: r.group_id, group_name: r.group_name, regs: r.regs, ftds: r.ftds })), 'campaign_group_id', 'group_name'));
+  const countryRows = withRates(mergeRows(data.byCountry, (regFtdData.byCountry||[]).map(r=>({ country_code: r.country, regs: r.regs, ftds: r.ftds })), 'country_code', null));
+  const offerRows = withRates(mergeRows(data.byOffer, regFtdData.byOffer, 'offer_id', 'offer_name'));
+  const brandRows = withRates(mergeRows(data.byBrand, regFtdData.byBrand, 'brand_id', 'brand_name'));
+
+  renderTableHeaders();
+  renderTable('tblCampaign', 'campaign', sortRows(campaignRows, tableSort.campaign, campaignKey), campaignKey, campaignLink, overallAvg);
+  renderTable('tblFlow', 'flow', sortRows(flowRows, tableSort.flow, flowKey), flowKey, null, overallAvg);
+  renderTable('tblGroup', 'group', sortRows(groupRows, tableSort.group, groupKey), groupKey, null, overallAvg);
+  renderTable('tblCountry', 'country', sortRows(countryRows, tableSort.country, countryKey), countryKey, null, overallAvg);
+  renderTable('tblOffer', 'offer', sortRows(offerRows, tableSort.offer, offerKey), offerKey, null, overallAvg);
+  renderTable('tblBrand', 'brand', sortRows(brandRows, tableSort.brand, brandKey), brandKey, null, overallAvg);
+}
+
+let state = { from: null, to: null };
+
+let progressTimer = null;
+function setLoading(isLoading){
+  document.getElementById('loadingOverlay').classList.toggle('active', isLoading);
+  document.getElementById('content').style.opacity = isLoading ? '0.5' : '1';
+  const fill = document.getElementById('progressFill');
+  const pctEl = document.getElementById('progressPct');
+  clearInterval(progressTimer);
+  if(isLoading){
+    const startTime = Date.now();
+    const DURATION_MS = 110000;
+    fill.style.width = '0%';
+    pctEl.textContent = 'Loading… 0%';
+    progressTimer = setInterval(()=>{
+      const elapsed = Date.now() - startTime;
+      const pct = Math.min(99, Math.round(elapsed / DURATION_MS * 100));
+      fill.style.width = pct + '%';
+      pctEl.textContent = `Loading… ${pct}%`;
+    }, 200);
+  }
+}
+
+function setUpdating(isUpdating){
+  const el = document.getElementById('updatingBadge');
+  if(el) el.classList.toggle('hidden', !isUpdating);
+}
+
+async function loadRange(from, to){
+  state.from = from; state.to = to;
+  const token = localStorage.getItem(TOKEN_KEY);
+  setLoading(true);
+  try{
+    const filters = currentFilters();
+    const [data, regFtdData] = await Promise.all([
+      apiFetch(from, to, token, filters),
+      apiFetchRegFtd(from, to, token, filters),
+    ]);
+    renderAll(data, regFtdData);
+  } finally {
+    setLoading(false);
+  }
+}
+
+function reloadWithFilters(){
+  if(state.from && state.to) loadRange(state.from, state.to);
+}
+
+['filterCampaign','filterGroup','filterCountry'].forEach(id=>{
+  document.getElementById(id).addEventListener('change', reloadWithFilters);
+});
+document.getElementById('clearFilters').addEventListener('click', ()=>{
+  document.getElementById('filterCampaign').value = '';
+  document.getElementById('filterGroup').value = '';
+  document.getElementById('filterCountry').value = '';
+  reloadWithFilters();
+});
+
+function applyPreset(days){
+  const to = new Date();
+  const from = new Date(Date.now() - (days-1)*86400000);
+  document.getElementById('fromInput').value = toISO(from);
+  document.getElementById('toInput').value = toISO(to);
+  loadRange(toISO(from), toISO(to));
+}
+
+function applyCalendarPreset(preset){
+  const now = new Date();
+  let from, to;
+  if(preset === 'yesterday'){
+    from = to = new Date(now.getFullYear(), now.getMonth(), now.getDate()-1);
+  } else if(preset === 'lastweek'){
+    const thisSunday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
+    from = new Date(thisSunday.getFullYear(), thisSunday.getMonth(), thisSunday.getDate() - 7);
+    to = new Date(thisSunday.getFullYear(), thisSunday.getMonth(), thisSunday.getDate() - 1);
+  } else if(preset === 'lastmonth'){
+    from = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    to = new Date(now.getFullYear(), now.getMonth(), 0);
+  }
+  document.getElementById('fromInput').value = toISO(from);
+  document.getElementById('toInput').value = toISO(to);
+  loadRange(toISO(from), toISO(to));
+}
+
+document.getElementById('rangeSelect').addEventListener('change', e=>{
+  const value = e.target.value;
+  const customRange = document.getElementById('customRange');
+  if(value === 'custom'){
+    customRange.hidden = false;
+    return;
+  }
+  customRange.hidden = true;
+  const [kind, arg] = value.split(':');
+  if(kind === 'range') applyPreset(Number(arg));
+  else if(kind === 'preset') applyCalendarPreset(arg);
+});
+document.getElementById('applyRange').addEventListener('click', ()=>{
+  const from = document.getElementById('fromInput').value;
+  const to = document.getElementById('toInput').value;
+  if(from && to) loadRange(from, to);
+});
+
+function showApp(){
+  document.getElementById('loginView').classList.add('hidden');
+  document.getElementById('appView').classList.remove('hidden');
+}
+function showLogin(){
+  document.getElementById('loginView').classList.remove('hidden');
+  document.getElementById('appView').classList.add('hidden');
+}
+function clearSession(){
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(TOKEN_EXPIRY_KEY);
+}
+
+async function loadInto(token){
+  const today = new Date();
+  const from = new Date(Date.now() - 6*86400000);
+  setLoading(true);
+  try{
+    const [data, regFtdData] = await Promise.all([
+      apiFetch(toISO(from), toISO(today), token),
+      apiFetchRegFtd(toISO(from), toISO(today), token),
+    ]);
+    state.from = toISO(from); state.to = toISO(today);
+    document.getElementById('fromInput').value = toISO(from);
+    document.getElementById('toInput').value = toISO(today);
+    renderAll(data, regFtdData);
+    loadFilterOptions(token);
+  } finally {
+    setLoading(false);
+  }
+}
+
+async function loginWithPassword(password){
+  document.getElementById('loginError').textContent = '';
+  try{
+    await loadInto(password);
+    localStorage.setItem(TOKEN_KEY, password);
+    localStorage.setItem(TOKEN_EXPIRY_KEY, String(Date.now() + REMEMBER_MS));
+    showApp();
+  } catch {
+    clearSession();
+    document.getElementById('loginError').textContent = 'Incorrect password.';
+  }
+}
+
+async function resumeSession(token){
+  // Trust the saved 7-day session immediately; only kick back to login on a genuine 401,
+  // never on a slow/failed data request (so a flaky API call can't wipe a valid session).
+  showApp();
+  const today = new Date();
+  const from = new Date(Date.now() - 6*86400000);
+  const url1 = `${API_BASE}/api/keitaro?${new URLSearchParams({ from: toISO(from), to: toISO(today) }).toString()}`;
+  const url2 = `${API_BASE}/api/keitaro-regftd?${new URLSearchParams({ from: toISO(from), to: toISO(today), source: 'report' }).toString()}`;
+  const cached1 = peekCached(url1);
+  const cached2 = peekCached(url2);
+
+  if(cached1 && cached2){
+    // Instant render from last-known data (even if from a previous day) instead of
+    // blocking on a fresh fetch every time the daily cache expires.
+    state.from = toISO(from); state.to = toISO(today);
+    document.getElementById('fromInput').value = toISO(from);
+    document.getElementById('toInput').value = toISO(today);
+    renderAll(cached1.data, cached2.data);
+    loadFilterOptions(token);
+    if(!cached1.fresh || !cached2.fresh){
+      setUpdating(true);
+      try{
+        const [data, regFtdData] = await Promise.all([
+          apiFetch(toISO(from), toISO(today), token),
+          apiFetchRegFtd(toISO(from), toISO(today), token),
+        ]);
+        state.from = toISO(from); state.to = toISO(today);
+        renderAll(data, regFtdData);
+      } catch(err){
+        if(err && err.message === 'REQUEST_FAILED_401'){
+          clearSession();
+          showLogin();
+          document.getElementById('loginError').textContent = 'Your session expired, please log in again.';
+        }
+        // else: keep showing the last-known data silently; don't disrupt the user over a background refresh hiccup
+      } finally {
+        setUpdating(false);
+      }
+    }
+    return;
+  }
+
+  // No usable cache yet (first-ever visit) — fall back to the original blocking load.
+  try{
+    await loadInto(token);
+  } catch(err){
+    if(err && err.message === 'REQUEST_FAILED_401'){
+      clearSession();
+      showLogin();
+      document.getElementById('loginError').textContent = 'Your session expired, please log in again.';
+    } else {
+      document.getElementById('rangeLabel').textContent = 'Error loading data — try refreshing the page';
+    }
+  }
+}
+
+document.getElementById('loginForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  loginWithPassword(document.getElementById('password').value);
+});
+document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  clearSession();
+  location.reload();
+});
+
+function clearAllCache(){
+  for(let i = localStorage.length - 1; i >= 0; i--){
+    const k = localStorage.key(i);
+    if(k && k.startsWith(CACHE_PREFIX)) localStorage.removeItem(k);
+  }
+}
+document.getElementById('refreshBtn').addEventListener('click', ()=>{
+  clearAllCache();
+  if(state.from && state.to) loadRange(state.from, state.to);
+});
+
+const savedToken = localStorage.getItem(TOKEN_KEY);
+const savedExpiry = Number(localStorage.getItem(TOKEN_EXPIRY_KEY) || 0);
+if(savedToken && Date.now() < savedExpiry){
+  resumeSession(savedToken);
+} else {
+  clearSession();
+}
+</script>
+</body>
+</html>

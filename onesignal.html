@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OneSignal - Accounts Overview</title>
+<style>
+:root{color-scheme:light}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f7f8fa;color:#172033;overflow-x:hidden}
+.wrap{max-width:1400px;margin:auto;padding:24px 14px 40px}
+h1{margin:0 0 6px;font-size:28px}.sub{color:#6b7280;margin-bottom:18px}
+.topbar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+.nav{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.nav a{color:#172033;text-decoration:none;font-size:14px;padding:9px 14px;border-radius:10px;border:1px solid #d1d5db;background:#fff;cursor:pointer}
+.nav a:hover{border-color:#9ca3af}
+.nav a.active{background:#111827;color:#fff;border-color:#111827}
+.login{max-width:420px;margin:12vh auto 0;background:#fff;border:1px solid #e5e7eb;border-radius:20px;padding:26px;box-shadow:0 12px 32px rgba(17,24,39,.08)}
+.login h1{font-size:26px;margin-bottom:8px}.login p{color:#6b7280;margin-top:0}
+input{padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;font-size:15px;box-sizing:border-box;max-width:100%}
+input[type=password]{width:100%}
+button{border:0;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;cursor:pointer}
+.primary{width:100%;margin-top:12px;background:#111827;color:#fff}
+.logout{background:#fff;border:1px solid #d1d5db}
+.error{color:#b91c1c;margin-top:10px;font-size:14px;min-height:20px}
+.hidden{display:none}
+.loading-overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;gap:12px;flex-direction:column;background:rgba(247,248,250,.85);z-index:50;opacity:0;pointer-events:none;transition:opacity .15s}
+.loading-overlay.active{opacity:1;pointer-events:auto}
+.progress-bar-track{width:220px;height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden}
+.progress-bar-fill{height:100%;width:0%;background:#111827;border-radius:999px;transition:width .2s linear}
+.loading-overlay span{font-size:14px;color:#6b7280;font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.stat{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:13px 14px;box-shadow:0 8px 20px rgba(17,24,39,.05)}
+.stat .label{font-size:12px;color:#6b7280;margin-bottom:4px;white-space:nowrap}
+.stat .value{font-size:22px;font-weight:700}
+.accounts{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:16px;margin-bottom:22px}
+.account-card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:18px 20px;box-shadow:0 8px 24px rgba(17,24,39,.05)}
+.account-card h3{margin:0 0 2px;font-size:17px;display:flex;align-items:center;gap:8px}
+.account-card .org-id{color:#9ca3af;font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;margin-bottom:12px}
+.account-stats{display:flex;gap:18px;margin-bottom:16px}
+.account-stats div{font-size:13px;color:#6b7280}
+.account-stats b{display:block;font-size:19px;color:#172033;font-weight:700}
+.mau-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.mau-row label{font-size:12px;color:#6b7280;white-space:nowrap}
+.mau-row input[type=number]{width:70px}
+.mau-bar-track{flex:1;height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden}
+.mau-bar-fill{height:100%;border-radius:999px;transition:width .2s}
+.mau-bar-fill.ok{background:#16a34a}
+.mau-bar-fill.warn{background:#d97706}
+.mau-bar-fill.bad{background:#dc2626}
+.mau-pct{font-size:12px;font-weight:700;min-width:38px;text-align:right}
+.mau-note{font-size:11px;color:#9ca3af;margin-top:4px}
+.mau-note a{color:#6b7280}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.toolbar input[type=text]{flex:1 1 220px;min-width:0}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.chip{background:#fff;border:1px solid #d1d5db;color:#374151;font-size:13px;font-weight:600;padding:7px 13px;border-radius:999px;cursor:pointer}
+.chip:hover{border-color:#9ca3af}
+.chip.active{background:#111827;color:#fff;border-color:#111827}
+.panel{background:#fff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;box-shadow:0 8px 24px rgba(17,24,39,.05)}
+.table-scroll{overflow:auto;max-height:70vh}
+table{width:100%;border-collapse:collapse}
+th,td{padding:9px 12px;border-bottom:1px solid #eef0f3;text-align:left;font-size:13px;white-space:nowrap}
+th{background:#fafbfc;font-weight:600;position:sticky;top:0;z-index:1;cursor:pointer;user-select:none}
+th:hover{color:#111827}
+th .arrow{font-size:10px;margin-left:4px;color:#9ca3af}
+tr:hover td{background:#fafbfc}
+td.appname{font-weight:600}
+.badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;background:#e5e7eb;color:#374151}
+.muted{color:#6b7280;padding:20px;text-align:center}
+#content{transition:opacity .15s}
+@media(max-width:1100px){.stats{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<section id="loginView" class="login">
+  <h1>OneSignal Overview</h1>
+  <p>Enter the password to view OneSignal accounts overview.</p>
+  <form id="loginForm">
+    <input id="password" type="password" autocomplete="current-password" placeholder="Password" required>
+    <button class="primary" type="submit">Login</button>
+    <div id="loginError" class="error"></div>
+  </form>
+</section>
+
+<div id="loadingOverlay" class="loading-overlay"><div class="progress-bar-track"><div class="progress-bar-fill" id="progressFill"></div></div><span id="progressPct">Loading… 0%</span></div>
+
+<main id="appView" class="wrap hidden">
+  <div class="topbar">
+    <div><h1>OneSignal Overview</h1><div class="sub" id="rangeLabel">Apps × subscribers across all OneSignal accounts</div></div>
+    <button id="refreshBtn" class="logout" type="button">↻ Refresh</button>
+    <button id="logoutBtn" class="logout">Logout</button>
+  </div>
+
+  <div class="nav">
+    <a href="keitaro-mbm.html">General Dashboard</a>
+    <a href="keitaro-groups-mbm.html">By Group</a>
+    <a href="ltv.html">LTV Report</a>
+    <a href="ranking.html">Ranking</a>
+    <a href="commission.html">Commission</a>
+    <a href="commission_worker.html">Commission Worker</a>
+    <a href="operations.html">Operations Report</a>
+    <a href="operations-september.html">Operations September</a>
+    <a href="ftd.html">FTD</a>
+    <a href="offer-mbm.html">Offer</a>
+    <a href="chat-mbm.html">Chat</a>
+    <a href="domain.html">Domains</a>
+    <a href="domain_traffic.html">Traffic</a>
+    <a href="keitaro_domains.html">Domains (DB)</a>
+    <a href="onesignal.html" class="active">OneSignal</a>
+    <a href="zone.html">Zones</a>
+    <a href="keitaro_amz_group.html">Keitaro Groups</a>
+    <a href="namecheap.html">Namecheap</a>
+  </div>
+
+  <div id="content">
+    <div class="stats">
+      <div class="stat"><div class="label">Accounts</div><div class="value" id="statAccounts">-</div></div>
+      <div class="stat"><div class="label">Total Apps</div><div class="value" id="statApps">-</div></div>
+      <div class="stat"><div class="label">Total Subscribers</div><div class="value" id="statPlayers">-</div></div>
+      <div class="stat"><div class="label">Total Messageable</div><div class="value" id="statMessageable">-</div></div>
+    </div>
+
+    <div class="accounts" id="accountCards"></div>
+
+    <div class="toolbar">
+      <input type="text" id="searchBox" placeholder="Search app name...">
+      <select id="accountFilter"><option value="all">All accounts</option></select>
+    </div>
+    <div class="chips" id="chips">
+      <button class="chip active" data-filter="all">All</button>
+      <button class="chip" data-filter="hassubs">Has subscribers</button>
+      <button class="chip" data-filter="empty">Empty (0 subscribers)</button>
+    </div>
+
+    <div class="panel">
+      <div class="table-scroll">
+        <table>
+          <thead><tr>
+            <th class="sortable" data-sort="accountLabel" data-label="Account">Account</th>
+            <th class="sortable" data-sort="name" data-label="App">App</th>
+            <th class="sortable" data-sort="players" data-label="Subscribers">Subscribers</th>
+            <th class="sortable" data-sort="messageablePlayers" data-label="Messageable">Messageable</th>
+            <th class="sortable" data-sort="createdAt" data-label="Created">Created</th>
+          </tr></thead>
+          <tbody id="tblApps"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+const API_BASE = "";
+const TOKEN_KEY = "keitaro_dashboard_token";
+const TOKEN_EXPIRY_KEY = "keitaro_dashboard_token_expiry";
+const REMEMBER_MS = 7 * 24 * 60 * 60 * 1000;
+const MAU_PREFIX = "onesignal_mau:";
+const MAU_LIMIT_DEFAULT = 1000;
+
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function fmtNum(n){ return Number(n||0).toLocaleString('en-US'); }
+
+function getMau(orgId){ try{ return Number(localStorage.getItem(MAU_PREFIX + orgId) || 0); }catch{ return 0; } }
+function setMau(orgId, val){ try{ localStorage.setItem(MAU_PREFIX + orgId, String(val)); }catch{} }
+
+let progressTimer = null;
+function setLoading(isLoading){
+  document.getElementById('loadingOverlay').classList.toggle('active', isLoading);
+  document.getElementById('content').style.opacity = isLoading ? '0.5' : '1';
+  const fill = document.getElementById('progressFill');
+  const pctEl = document.getElementById('progressPct');
+  clearInterval(progressTimer);
+  if(isLoading){
+    const startTime = Date.now();
+    const DURATION_MS = 12000;
+    fill.style.width = '0%';
+    pctEl.textContent = 'Loading… 0%';
+    progressTimer = setInterval(()=>{
+      const elapsed = Date.now() - startTime;
+      const pct = Math.min(99, Math.round(elapsed / DURATION_MS * 100));
+      fill.style.width = pct + '%';
+      pctEl.textContent = `Loading… ${pct}%`;
+    }, 200);
+  }
+}
+
+let accountsData = [];
+let appsData = [];
+let currentFilter = 'all';
+let currentAccount = 'all';
+const tableSort = { key: 'players', dir: 'desc' };
+
+async function fetchOneSignal(token){
+  const res = await fetch(`${API_BASE}/api/onesignal`, { headers: { 'x-api-token': token } });
+  if(!res.ok) throw new Error('REQUEST_FAILED_' + res.status);
+  return res.json();
+}
+
+function mauClass(pct){
+  if(pct >= 90) return 'bad';
+  if(pct >= 70) return 'warn';
+  return 'ok';
+}
+
+function renderAccountCards(){
+  const el = document.getElementById('accountCards');
+  el.innerHTML = accountsData.map(a => {
+    const mau = getMau(a.orgId);
+    const pct = Math.min(100, Math.round(mau / MAU_LIMIT_DEFAULT * 100));
+    const cls = mauClass(pct);
+    const errNote = a.error ? `<div class="mau-note" style="color:#b91c1c">Error loading apps: ${esc(a.error)}</div>` : '';
+    return `
+    <div class="account-card">
+      <h3>${esc(a.label)}</h3>
+      <div class="org-id">${esc(a.orgId)}</div>
+      <div class="account-stats">
+        <div><b>${a.totalApps}</b>Apps</div>
+        <div><b>${fmtNum(a.totalPlayers)}</b>Subscribers</div>
+        <div><b>${fmtNum(a.totalMessageable)}</b>Messageable</div>
+      </div>
+      <div class="mau-row">
+        <label for="mau-${esc(a.orgId)}">MAU used</label>
+        <input type="number" id="mau-${esc(a.orgId)}" min="0" value="${mau}" data-org="${esc(a.orgId)}">
+        <div class="mau-bar-track"><div class="mau-bar-fill ${cls}" style="width:${pct}%"></div></div>
+        <div class="mau-pct">${pct}%</div>
+      </div>
+      <div class="mau-note">OneSignal's public API doesn't expose the exact MAU-vs-plan-limit number — enter it manually from their email alert or <a href="https://dashboard.onesignal.com" target="_blank" rel="noopener noreferrer">Billing page</a> to track it here (out of ${MAU_LIMIT_DEFAULT}/mo on Free plan).</div>
+      ${errNote}
+    </div>`;
+  }).join('');
+
+  el.querySelectorAll('input[type=number][data-org]').forEach(inp => {
+    inp.addEventListener('input', e => {
+      const orgId = e.target.dataset.org;
+      const val = Math.max(0, Number(e.target.value) || 0);
+      setMau(orgId, val);
+      // Update the bar/pct in place instead of re-rendering the whole card — a full
+      // re-render would recreate this input mid-keystroke and drop focus/cursor.
+      const card = e.target.closest('.account-card');
+      const pct = Math.min(100, Math.round(val / MAU_LIMIT_DEFAULT * 100));
+      const cls = mauClass(pct);
+      const fill = card.querySelector('.mau-bar-fill');
+      fill.className = `mau-bar-fill ${cls}`;
+      fill.style.width = pct + '%';
+      card.querySelector('.mau-pct').textContent = pct + '%';
+    });
+  });
+}
+
+function matchesFilter(a, filter){
+  if(filter === 'all') return true;
+  if(filter === 'hassubs') return a.players > 0;
+  if(filter === 'empty') return a.players === 0;
+  return true;
+}
+function matchesSearch(a, q){
+  if(!q) return true;
+  return a.name.toLowerCase().includes(q.toLowerCase());
+}
+function matchesAccount(a, account){
+  if(account === 'all') return true;
+  return a.accountLabel === account;
+}
+
+function sortRows(rows){
+  const { key, dir } = tableSort;
+  const mul = dir === 'asc' ? 1 : -1;
+  return [...rows].sort((a,b)=>{
+    if(key === 'players' || key === 'messageablePlayers'){
+      return ((a[key]||0) - (b[key]||0)) * mul;
+    }
+    let av = String(a[key] ?? '').toLowerCase(), bv = String(b[key] ?? '').toLowerCase();
+    if(av < bv) return -1*mul;
+    if(av > bv) return 1*mul;
+    return 0;
+  });
+}
+
+function renderTableHeaders(){
+  document.querySelectorAll('th.sortable').forEach(th=>{
+    const sortKey = th.dataset.sort, label = th.dataset.label;
+    const active = tableSort.key === sortKey;
+    const arrow = active ? (tableSort.dir === 'asc' ? '▲' : '▼') : '';
+    th.innerHTML = `${esc(label)}${arrow ? ` <span class="arrow">${arrow}</span>` : ''}`;
+  });
+}
+
+function renderTable(){
+  const q = document.getElementById('searchBox').value.trim();
+  const filtered = appsData.filter(a => matchesFilter(a, currentFilter) && matchesSearch(a, q) && matchesAccount(a, currentAccount));
+  const rows = sortRows(filtered);
+  const tbody = document.getElementById('tblApps');
+  if(!rows.length){ tbody.innerHTML = `<tr><td colspan="5" class="muted">No apps match</td></tr>`; return; }
+  tbody.innerHTML = rows.map(a => `
+    <tr>
+      <td><span class="badge">${esc(a.accountLabel)}</span></td>
+      <td class="appname">${esc(a.name)}</td>
+      <td>${fmtNum(a.players)}</td>
+      <td>${fmtNum(a.messageablePlayers)}</td>
+      <td>${a.createdAt ? esc(a.createdAt.slice(0,10)) : '-'}</td>
+    </tr>
+  `).join('');
+}
+
+function renderStats(){
+  document.getElementById('statAccounts').textContent = accountsData.length;
+  document.getElementById('statApps').textContent = accountsData.reduce((s,a)=>s+a.totalApps,0);
+  document.getElementById('statPlayers').textContent = fmtNum(accountsData.reduce((s,a)=>s+a.totalPlayers,0));
+  document.getElementById('statMessageable').textContent = fmtNum(accountsData.reduce((s,a)=>s+a.totalMessageable,0));
+}
+
+function renderAccountOptions(){
+  const sel = document.getElementById('accountFilter');
+  const current = sel.value;
+  sel.innerHTML = '<option value="all">All accounts</option>' +
+    accountsData.map(a => `<option value="${esc(a.label)}">${esc(a.label)}</option>`).join('');
+  if(accountsData.some(a => a.label === current)) sel.value = current;
+}
+
+function renderAll(){
+  renderTableHeaders();
+  renderStats();
+  renderAccountCards();
+  renderAccountOptions();
+  renderTable();
+}
+
+document.querySelectorAll('th.sortable').forEach(th=>{
+  th.addEventListener('click', ()=>{
+    const sortKey = th.dataset.sort;
+    if(tableSort.key === sortKey){ tableSort.dir = tableSort.dir === 'asc' ? 'desc' : 'asc'; }
+    else { tableSort.key = sortKey; tableSort.dir = 'asc'; }
+    renderTableHeaders();
+    renderTable();
+  });
+});
+
+document.getElementById('searchBox').addEventListener('input', renderTable);
+document.getElementById('chips').addEventListener('click', e=>{
+  const chip = e.target.closest('.chip');
+  if(!chip) return;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  currentFilter = chip.dataset.filter;
+  renderTable();
+});
+document.getElementById('accountFilter').addEventListener('change', e=>{
+  currentAccount = e.target.value;
+  renderTable();
+});
+
+async function loadInto(token){
+  setLoading(true);
+  try{
+    const data = await fetchOneSignal(token);
+    accountsData = data.accounts;
+    appsData = [];
+    accountsData.forEach(a => {
+      a.apps.forEach(app => appsData.push({ ...app, accountLabel: a.label }));
+    });
+    document.getElementById('rangeLabel').textContent = `Apps × subscribers across all OneSignal accounts · updated ${new Date(data.generatedAt).toLocaleString()}`;
+    renderAll();
+  } finally {
+    setLoading(false);
+  }
+}
+
+document.getElementById('refreshBtn').addEventListener('click', ()=>{
+  const token = localStorage.getItem(TOKEN_KEY);
+  if(token) loadInto(token);
+});
+
+function showApp(){
+  document.getElementById('loginView').classList.add('hidden');
+  document.getElementById('appView').classList.remove('hidden');
+}
+function showLogin(){
+  document.getElementById('loginView').classList.remove('hidden');
+  document.getElementById('appView').classList.add('hidden');
+}
+function clearSession(){
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(TOKEN_EXPIRY_KEY);
+}
+
+async function loginWithPassword(password){
+  document.getElementById('loginError').textContent = '';
+  try{
+    await loadInto(password);
+    localStorage.setItem(TOKEN_KEY, password);
+    localStorage.setItem(TOKEN_EXPIRY_KEY, String(Date.now() + REMEMBER_MS));
+    showApp();
+  } catch {
+    clearSession();
+    document.getElementById('loginError').textContent = 'Incorrect password.';
+  }
+}
+
+async function resumeSession(token){
+  showApp();
+  try{
+    await loadInto(token);
+  } catch(err){
+    if(err && err.message === 'REQUEST_FAILED_401'){
+      clearSession();
+      showLogin();
+      document.getElementById('loginError').textContent = 'Your session expired, please log in again.';
+    } else {
+      document.getElementById('rangeLabel').textContent = 'Error loading data — try refreshing the page';
+    }
+  }
+}
+
+document.getElementById('loginForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  loginWithPassword(document.getElementById('password').value);
+});
+document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  clearSession();
+  location.reload();
+});
+
+const savedToken = localStorage.getItem(TOKEN_KEY);
+const savedExpiry = Number(localStorage.getItem(TOKEN_EXPIRY_KEY) || 0);
+if(savedToken && Date.now() < savedExpiry){
+  resumeSession(savedToken);
+} else {
+  clearSession();
+}
+</script>
+</body>
+</html>
